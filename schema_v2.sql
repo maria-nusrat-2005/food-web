@@ -142,6 +142,29 @@ ALTER TABLE banners ENABLE ROW LEVEL SECURITY;
 ALTER TABLE notifications ENABLE ROW LEVEL SECURITY;
 ALTER TABLE reservations ENABLE ROW LEVEL SECURITY;
 
+-- Clean up existing policies if any to prevent duplicate policy crashes
+DROP POLICY IF EXISTS "Allow public read categories" ON categories;
+DROP POLICY IF EXISTS "Allow public read foods" ON foods;
+DROP POLICY IF EXISTS "Allow public read banners" ON banners;
+DROP POLICY IF EXISTS "Allow public read reviews" ON reviews;
+DROP POLICY IF EXISTS "Allow public insert reviews" ON reviews;
+DROP POLICY IF EXISTS "Allow public read profiles" ON profiles;
+DROP POLICY IF EXISTS "Allow user edit own profile" ON profiles;
+DROP POLICY IF EXISTS "Allow user insert own profile" ON profiles;
+DROP POLICY IF EXISTS "Allow public read coupons" ON coupons;
+DROP POLICY IF EXISTS "Allow user read own orders" ON orders;
+DROP POLICY IF EXISTS "Allow user insert own orders" ON orders;
+DROP POLICY IF EXISTS "Allow admin edit orders" ON orders;
+DROP POLICY IF EXISTS "Allow public read order items" ON order_items;
+DROP POLICY IF EXISTS "Allow public insert order items" ON order_items;
+DROP POLICY IF EXISTS "Allow user check own favorites" ON favorites;
+DROP POLICY IF EXISTS "Allow user insert own favorites" ON favorites;
+DROP POLICY IF EXISTS "Allow user delete own favorites" ON favorites;
+DROP POLICY IF EXISTS "Allow user check own notifications" ON notifications;
+DROP POLICY IF EXISTS "Allow user update own notifications" ON notifications;
+DROP POLICY IF EXISTS "Allow public insert reservations" ON reservations;
+DROP POLICY IF EXISTS "Allow user read own reservations" ON reservations;
+
 -- Define Row Level Security Policies
 CREATE POLICY "Allow public read categories" ON categories FOR SELECT USING (true);
 CREATE POLICY "Allow public read foods" ON foods FOR SELECT USING (true);
@@ -158,7 +181,7 @@ CREATE POLICY "Allow user insert own profile" ON profiles FOR INSERT WITH CHECK 
 CREATE POLICY "Allow public read coupons" ON coupons FOR SELECT USING (true);
 
 -- Orders policies
-CREATE POLICY "Allow user read own orders" ON orders FOR SELECT USING (true); -- simplified for local mock-up
+CREATE POLICY "Allow user read own orders" ON orders FOR SELECT USING (true);
 CREATE POLICY "Allow user insert own orders" ON orders FOR INSERT WITH CHECK (true);
 CREATE POLICY "Allow admin edit orders" ON orders FOR ALL USING (true);
 
@@ -201,7 +224,7 @@ INSERT INTO foods (title, description, price, discount_price, category_id, image
 ('Watermelon Juice', 'Freshly blended refreshing watermelon juice, perfect for hot summer days.', 200, 170, 'c1000000-0000-0000-0000-000000000002', '/Image/rohollah-saberi-21QZGQKpOYE-unsplash.jpg', 4.8, 90, 4, 80, true, true, true, true, 0),
 ('Special Orange Juice', 'Zesty signature orange juice blended with dynamic citrus ingredients.', 250, null, 'c1000000-0000-0000-0000-000000000002', '/Image/abhishek-hajare-kkrXVKK-jhg-unsplash.jpg', 4.9, 130, 5, 50, false, true, true, true, 0),
 ('Cappuccino', 'Authentic espresso base layered with steaming milk and rich, velvety milk foam.', 300, 260, 'c1000000-0000-0000-0000-000000000003', '/Image/nathan-dumlao-zUNs99PGDg0-unsplash.jpg', 4.9, 150, 6, 90, true, true, false, true, 0),
-('Hot Coffee', 'Freshly brewed aromatic coffee, served steaming hot.', 100, null, 'c1000000-0000-0000-0000-000000000003', '/Image/clay-banks-_wkd7XBRfU4-unsplash.jpg', 4.5, 5, 3, 200, false, true, true, true, 0),
+('Hot Coffee', 'Freshly brewed aromatic coffee, server steaming hot.', 100, null, 'c1000000-0000-0000-0000-000000000003', '/Image/clay-banks-_wkd7XBRfU4-unsplash.jpg', 4.5, 5, 3, 200, false, true, true, true, 0),
 ('Iced Coffee', 'Chilled espresso poured over ice and finished with cream.', 180, null, 'c1000000-0000-0000-0000-000000000003', '/Image/nathan-dumlao-vZOZJH_xkUk-unsplash.jpg', 4.7, 180, 4, 150, false, true, false, true, 0),
 ('Our Special Coffee', 'Classic rich roast coffee brewed from house-roasted special organic beans.', 180, 160, 'c1000000-0000-0000-0000-000000000003', '/Image/clay-banks-_wkd7XBRfU4-unsplash.jpg', 4.8, 10, 5, 120, true, true, true, true, 0);
 
