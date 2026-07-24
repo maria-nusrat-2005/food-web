@@ -17,9 +17,13 @@ interface NavbarProps {
 
 const CATEGORIES = [
   { id: 'all', name: 'All Menu', icon: Layers },
-  { id: 'burger', name: 'Burgers 🍔', icon: Pizza },
-  { id: 'drinks', name: 'Drinks 🍹', icon: Wine },
-  { id: 'coffee', name: 'Coffee 🍵', icon: Coffee },
+  { id: 'appetizer', name: 'Appetizers', icon: Pizza },
+  { id: 'main', name: 'Main Courses', icon: Pizza },
+  { id: 'bangladeshi', name: 'Bangladeshi', icon: Layers },
+  { id: 'fastfood', name: 'Fast Food', icon: Pizza },
+  { id: 'seafood', name: 'Seafood', icon: Pizza },
+  { id: 'dessert', name: 'Desserts', icon: Coffee },
+  { id: 'drinks', name: 'Drinks', icon: Wine },
 ];
 
 export default function Navbar({

@@ -5,7 +5,7 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE TABLE IF NOT EXISTS categories (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name TEXT NOT NULL UNIQUE,
-    icon TEXT, -- Lucide icon name or emoji
+    icon TEXT, -- Lucide icon name
     created_at TIMESTAMPTZ DEFAULT now()
 );
 
@@ -202,31 +202,82 @@ CREATE POLICY "Allow user update own notifications" ON notifications FOR UPDATE 
 CREATE POLICY "Allow public insert reservations" ON reservations FOR INSERT WITH CHECK (true);
 CREATE POLICY "Allow user read own reservations" ON reservations FOR SELECT USING (true);
 
+-- Clean up existing foods and categories
+TRUNCATE TABLE order_items RESTART IDENTITY CASCADE;
+TRUNCATE TABLE foods RESTART IDENTITY CASCADE;
+TRUNCATE TABLE categories RESTART IDENTITY CASCADE;
+
 -- Insert Category seeds
 INSERT INTO categories (id, name, icon) VALUES
-('c1000000-0000-0000-0000-000000000001', 'burger', 'Pizza'),
-('c1000000-0000-0000-0000-000000000002', 'drinks', 'Wine'),
-('c1000000-0000-0000-0000-000000000003', 'coffee', 'Coffee')
+('c1000000-0000-0000-0000-000000000001', 'appetizer', 'Pizza'),
+('c1000000-0000-0000-0000-000000000002', 'main', 'Pizza'),
+('c1000000-0000-0000-0000-000000000003', 'bangladeshi', 'Layers'),
+('c1000000-0000-0000-0000-000000000004', 'fastfood', 'Pizza'),
+('c1000000-0000-0000-0000-000000000005', 'seafood', 'Pizza'),
+('c1000000-0000-0000-0000-000000000006', 'dessert', 'Coffee'),
+('c1000000-0000-0000-0000-000000000007', 'drinks', 'Wine')
 ON CONFLICT (name) DO UPDATE SET icon = EXCLUDED.icon;
 
 -- Insert Food Seeds
 INSERT INTO foods (title, description, price, discount_price, category_id, image, rating, calories, cook_time, stock, featured, is_veg, is_vegan, is_gluten_free, spicy_level) VALUES
-('Our Special Burger', 'Juicy grilled burger with fresh lettuce, tomatoes, cheese, and our special sauce.', 900, 750, 'c1000000-0000-0000-0000-000000000001', '/Image/amirali-mirhashemian-sc5sTPMrVfk-unsplash.jpg', 4.9, 650, 15, 45, true, false, false, false, 1),
-('Chicken Burger', 'Juicy grilled chicken burger with fresh lettuce, tomatoes, cheese, and mild herb sauce.', 600, null, 'c1000000-0000-0000-0000-000000000001', '/Image/amirali-mirhashemian-sc5sTPMrVfk-unsplash.jpg', 4.7, 580, 12, 50, false, false, false, false, 0),
-('Chicken Cheese Burger', 'Grilled chicken patty with extra melted cheddar cheese, pickles, and our signature sauce.', 600, 550, 'c1000000-0000-0000-0000-000000000001', '/Image/amirali-mirhashemian-sc5sTPMrVfk-unsplash.jpg', 4.8, 620, 12, 35, true, false, false, false, 0),
-('Cheese Burger', 'Classic beef patty burger loaded with double layers of melted cheese, lettuce, and pickles.', 600, null, 'c1000000-0000-0000-0000-000000000001', '/Image/amirali-mirhashemian-sc5sTPMrVfk-unsplash.jpg', 4.6, 610, 10, 40, false, false, false, false, 0),
-('Student Special Burger', 'Delicious budget-friendly grilled chicken burger customized for students.', 150, null, 'c1000000-0000-0000-0000-000000000001', '/Image/amirali-mirhashemian-sc5sTPMrVfk-unsplash.jpg', 4.5, 450, 8, 100, false, false, false, false, 0),
-('Beef Burger', 'Premium ground beef patty grilled to order, with fresh onion rings, cheddar, and BBQ glaze.', 600, 500, 'c1000000-0000-0000-0000-000000000001', '/Image/amirali-mirhashemian-sc5sTPMrVfk-unsplash.jpg', 4.8, 680, 15, 30, true, false, false, false, 0),
-('Vegetable Burger', 'Healthy plant-based patty with fresh garden greens, tomatoes, and vegan garlic aioli.', 200, null, 'c1000000-0000-0000-0000-000000000001', '/Image/amirali-mirhashemian-sc5sTPMrVfk-unsplash.jpg', 4.4, 380, 10, 25, false, true, true, true, 0),
-('Beef Naga Burger', 'Super spicy beef burger loaded with extremely hot Bangladeshi Naga chili paste and cheese.', 520, null, 'c1000000-0000-0000-0000-000000000001', '/Image/amirali-mirhashemian-sc5sTPMrVfk-unsplash.jpg', 4.9, 700, 15, 20, true, false, false, false, 3),
-('Orange Juice', 'Freshly squeezed sweet orange juice full of natural pulp and vitamin C.', 180, 150, 'c1000000-0000-0000-0000-000000000002', '/Image/abhishek-hajare-kkrXVKK-jhg-unsplash.jpg', 4.7, 120, 5, 60, false, true, true, true, 0),
-('Papaya Juice', 'Creamy sweet papaya juice, served fresh and chilled.', 100, null, 'c1000000-0000-0000-0000-000000000002', '/Image/olivier-guillard-AjG1BkDH4Zs-unsplash.jpg', 4.5, 140, 5, 40, false, true, true, true, 0),
-('Watermelon Juice', 'Freshly blended refreshing watermelon juice, perfect for hot summer days.', 200, 170, 'c1000000-0000-0000-0000-000000000002', '/Image/rohollah-saberi-21QZGQKpOYE-unsplash.jpg', 4.8, 90, 4, 80, true, true, true, true, 0),
-('Special Orange Juice', 'Zesty signature orange juice blended with dynamic citrus ingredients.', 250, null, 'c1000000-0000-0000-0000-000000000002', '/Image/abhishek-hajare-kkrXVKK-jhg-unsplash.jpg', 4.9, 130, 5, 50, false, true, true, true, 0),
-('Cappuccino', 'Authentic espresso base layered with steaming milk and rich, velvety milk foam.', 300, 260, 'c1000000-0000-0000-0000-000000000003', '/Image/nathan-dumlao-zUNs99PGDg0-unsplash.jpg', 4.9, 150, 6, 90, true, true, false, true, 0),
-('Hot Coffee', 'Freshly brewed aromatic coffee, server steaming hot.', 100, null, 'c1000000-0000-0000-0000-000000000003', '/Image/clay-banks-_wkd7XBRfU4-unsplash.jpg', 4.5, 5, 3, 200, false, true, true, true, 0),
-('Iced Coffee', 'Chilled espresso poured over ice and finished with cream.', 180, null, 'c1000000-0000-0000-0000-000000000003', '/Image/nathan-dumlao-vZOZJH_xkUk-unsplash.jpg', 4.7, 180, 4, 150, false, true, false, true, 0),
-('Our Special Coffee', 'Classic rich roast coffee brewed from house-roasted special organic beans.', 180, 160, 'c1000000-0000-0000-0000-000000000003', '/Image/clay-banks-_wkd7XBRfU4-unsplash.jpg', 4.8, 10, 5, 120, true, true, true, true, 0);
+-- Appetizers
+('French Fries', 'Crispy golden French fries seasoned with salt and spices.', 150, null, 'c1000000-0000-0000-0000-000000000001', '/Image/amirali-mirhashemian-sc5sTPMrVfk-unsplash.jpg', 4.6, 312, 10, 50, false, true, true, true, 0),
+('Chicken Wings', 'Deep fried crispy chicken wings tossed in spicy buffalo sauce.', 350, 320, 'c1000000-0000-0000-0000-000000000001', '/Image/amirali-mirhashemian-sc5sTPMrVfk-unsplash.jpg', 4.8, 450, 12, 45, true, false, false, false, 2),
+('Spring Rolls', 'Crispy fried rolls filled with fresh sautéed vegetables.', 180, null, 'c1000000-0000-0000-0000-000000000001', '/Image/amirali-mirhashemian-sc5sTPMrVfk-unsplash.jpg', 4.4, 220, 8, 40, false, true, true, false, 0),
+('Garlic Bread', 'Toasted baguette slices brushed with garlic butter and herbs.', 120, null, 'c1000000-0000-0000-0000-000000000001', '/Image/amirali-mirhashemian-sc5sTPMrVfk-unsplash.jpg', 4.5, 180, 6, 60, false, true, false, false, 0),
+('Soup', 'Warm, comforting vegetable broth soup with rich herbs.', 200, null, 'c1000000-0000-0000-0000-000000000001', '/Image/amirali-mirhashemian-sc5sTPMrVfk-unsplash.jpg', 4.5, 150, 10, 30, false, true, true, true, 0),
+('Salad', 'Fresh garden greens with cucumbers, tomatoes, and olive oil dressing.', 220, 200, 'c1000000-0000-0000-0000-000000000001', '/Image/amirali-mirhashemian-sc5sTPMrVfk-unsplash.jpg', 4.7, 120, 5, 40, false, true, true, true, 0),
+
+-- Main Courses
+('Fried Rice', 'Classic wok-tossed jasmine rice with vegetables and light soy.', 300, null, 'c1000000-0000-0000-0000-000000000002', '/Image/amirali-mirhashemian-sc5sTPMrVfk-unsplash.jpg', 4.6, 550, 12, 40, false, true, false, true, 0),
+('Biryani', 'Aromatic basmati rice cooked with rich local spices and mutton.', 450, 400, 'c1000000-0000-0000-0000-000000000002', '/Image/amirali-mirhashemian-sc5sTPMrVfk-unsplash.jpg', 4.9, 750, 15, 35, true, false, false, false, 1),
+('Pizza', 'Hand-tossed crust topped with rich marinara sauce and mozzarella.', 800, null, 'c1000000-0000-0000-0000-000000000002', '/Image/amirali-mirhashemian-sc5sTPMrVfk-unsplash.jpg', 4.7, 950, 20, 30, true, true, false, false, 0),
+('Classic Burger', 'Beef patty loaded with melted cheese, lettuce, and pickles.', 350, null, 'c1000000-0000-0000-0000-000000000002', '/Image/amirali-mirhashemian-sc5sTPMrVfk-unsplash.jpg', 4.8, 650, 12, 45, false, false, false, false, 0),
+('Pasta', 'Penne pasta tossed in a creamy, velvety white sauce with garlic.', 400, 360, 'c1000000-0000-0000-0000-000000000002', '/Image/amirali-mirhashemian-sc5sTPMrVfk-unsplash.jpg', 4.6, 580, 15, 35, false, true, false, false, 0),
+('Sandwich', 'Grilled club sandwich loaded with layers of cheese and vegetables.', 250, null, 'c1000000-0000-0000-0000-000000000002', '/Image/amirali-mirhashemian-sc5sTPMrVfk-unsplash.jpg', 4.5, 420, 8, 50, false, true, false, false, 0),
+('Steak', 'Premium ribeye steak grilled to order, served with garlic mash.', 1200, 1100, 'c1000000-0000-0000-0000-000000000002', '/Image/amirali-mirhashemian-sc5sTPMrVfk-unsplash.jpg', 4.9, 850, 22, 15, true, false, false, true, 0),
+('Grilled Chicken', 'Tender chicken breast marinated in herbs and grilled to perfection.', 650, null, 'c1000000-0000-0000-0000-000000000002', '/Image/amirali-mirhashemian-sc5sTPMrVfk-unsplash.jpg', 4.7, 520, 18, 25, false, false, false, true, 0),
+('Noodles', 'Wok fried egg noodles tossed with scallions and mixed julienned veggies.', 280, null, 'c1000000-0000-0000-0000-000000000002', '/Image/amirali-mirhashemian-sc5sTPMrVfk-unsplash.jpg', 4.5, 480, 10, 40, false, false, false, false, 1),
+
+-- Bangladeshi Dishes
+('Kacchi Biryani', 'Traditional kacchi biryani with fragrant basmati and tender mutton.', 500, 450, 'c1000000-0000-0000-0000-000000000003', '/Image/amirali-mirhashemian-sc5sTPMrVfk-unsplash.jpg', 4.9, 850, 18, 30, true, false, false, false, 1),
+('Tehari', 'Fragrant mustard-infused rice cooked with tender cubes of spiced beef.', 350, null, 'c1000000-0000-0000-0000-000000000003', '/Image/amirali-mirhashemian-sc5sTPMrVfk-unsplash.jpg', 4.8, 720, 15, 45, true, false, false, false, 2),
+('Chicken Curry', 'Home style chicken curry cooked with potatoes and local spices.', 280, null, 'c1000000-0000-0000-0000-000000000003', '/Image/amirali-mirhashemian-sc5sTPMrVfk-unsplash.jpg', 4.6, 490, 15, 50, false, false, false, true, 2),
+('Beef Curry', 'Rich, slow cooked beef curry with a thick aromatic gravy.', 380, 350, 'c1000000-0000-0000-0000-000000000003', '/Image/amirali-mirhashemian-sc5sTPMrVfk-unsplash.jpg', 4.9, 580, 20, 40, false, false, false, true, 2),
+('Mutton Curry', 'Tender mutton cooked in traditional bhuna masala and spices.', 480, null, 'c1000000-0000-0000-0000-000000000003', '/Image/amirali-mirhashemian-sc5sTPMrVfk-unsplash.jpg', 4.8, 620, 20, 25, false, false, false, true, 2),
+('Polao', 'Aromatic chinigura rice cooked with ghee, raisins, and cardamoms.', 200, null, 'c1000000-0000-0000-0000-000000000003', '/Image/amirali-mirhashemian-sc5sTPMrVfk-unsplash.jpg', 4.6, 400, 10, 50, false, true, false, true, 0),
+('Bhuna Khichuri', 'Lentils and rice cooked together in bhuna spices, rich and thick.', 320, null, 'c1000000-0000-0000-0000-000000000003', '/Image/amirali-mirhashemian-sc5sTPMrVfk-unsplash.jpg', 4.7, 550, 15, 35, false, true, false, true, 1),
+('Fish Curry', 'Fresh water Rui fish cooked in mustard paste gravy, traditional style.', 260, 240, 'c1000000-0000-0000-0000-000000000003', '/Image/amirali-mirhashemian-sc5sTPMrVfk-unsplash.jpg', 4.5, 380, 12, 30, false, false, false, true, 2),
+
+-- Fast Food
+('Fried Chicken', 'Crispy, deep fried chicken pieces coated in seasoned flour.', 300, 270, 'c1000000-0000-0000-0000-000000000004', '/Image/amirali-mirhashemian-sc5sTPMrVfk-unsplash.jpg', 4.7, 480, 12, 60, false, false, false, false, 1),
+('Hot Dogs', 'Grilled chicken sausage in a soft bun topped with mustard sauce.', 220, null, 'c1000000-0000-0000-0000-000000000004', '/Image/amirali-mirhashemian-sc5sTPMrVfk-unsplash.jpg', 4.4, 390, 8, 50, false, false, false, false, 0),
+('Shawarma', 'Spiced chicken shavings wrapped in flatbread with garlic sauce.', 280, null, 'c1000000-0000-0000-0000-000000000004', '/Image/amirali-mirhashemian-sc5sTPMrVfk-unsplash.jpg', 4.8, 420, 10, 80, true, false, false, false, 1),
+('Wraps', 'Tortilla wrap filled with crispy chicken tenders and honey mustard.', 240, null, 'c1000000-0000-0000-0000-000000000004', '/Image/amirali-mirhashemian-sc5sTPMrVfk-unsplash.jpg', 4.5, 350, 8, 60, false, false, false, false, 1),
+('Club Sandwiches', 'Classic double decker bread sandwich filled with chicken and eggs.', 320, 290, 'c1000000-0000-0000-0000-000000000004', '/Image/amirali-mirhashemian-sc5sTPMrVfk-unsplash.jpg', 4.6, 460, 10, 45, false, false, false, false, 0),
+
+-- Seafood
+('Grilled Fish', 'Fresh red snapper fillet grilled with garlic butter and lemon.', 600, 550, 'c1000000-0000-0000-0000-000000000005', '/Image/amirali-mirhashemian-sc5sTPMrVfk-unsplash.jpg', 4.8, 420, 15, 20, true, false, false, true, 0),
+('Fried Shrimp', 'Crispy breaded jumbo shrimps deep fried, served with tartar sauce.', 450, null, 'c1000000-0000-0000-0000-000000000005', '/Image/amirali-mirhashemian-sc5sTPMrVfk-unsplash.jpg', 4.7, 380, 10, 35, false, false, false, false, 0),
+('Prawns', 'Wok tossed fresh prawns in a garlic, butter and coriander sauce.', 550, null, 'c1000000-0000-0000-0000-000000000005', '/Image/amirali-mirhashemian-sc5sTPMrVfk-unsplash.jpg', 4.8, 320, 12, 25, false, false, false, true, 1),
+('Crab', 'Whole crab cooked in local spicy tomato and chili masala paste.', 700, null, 'c1000000-0000-0000-0000-000000000005', '/Image/amirali-mirhashemian-sc5sTPMrVfk-unsplash.jpg', 4.9, 350, 18, 15, true, false, false, true, 3),
+
+-- Desserts
+('Ice Cream', 'Rich and creamy double scoop vanilla bean ice cream.', 150, null, 'c1000000-0000-0000-0000-000000000006', '/Image/amirali-mirhashemian-sc5sTPMrVfk-unsplash.jpg', 4.7, 250, 3, 100, false, true, false, true, 0),
+('Brownie', 'Warm, gooey chocolate fudge brownie loaded with walnuts.', 180, null, 'c1000000-0000-0000-0000-000000000006', '/Image/amirali-mirhashemian-sc5sTPMrVfk-unsplash.jpg', 4.8, 340, 5, 80, false, true, false, false, 0),
+('Cheesecake', 'Classic New York style baked cheesecake with a graham crust.', 255, null, 'c1000000-0000-0000-0000-000000000006', '/Image/amirali-mirhashemian-sc5sTPMrVfk-unsplash.jpg', 4.9, 410, 5, 45, true, true, false, false, 0),
+('Gulab Jamun', 'Traditional sweet milk dumplings fried and soaked in sugar syrup.', 100, null, 'c1000000-0000-0000-0000-000000000006', '/Image/amirali-mirhashemian-sc5sTPMrVfk-unsplash.jpg', 4.7, 180, 3, 150, false, true, false, false, 0),
+('Firni', 'Creamy local ground rice pudding flavored with saffron and almonds.', 120, null, 'c1000000-0000-0000-0000-000000000006', '/Image/amirali-mirhashemian-sc5sTPMrVfk-unsplash.jpg', 4.6, 200, 5, 70, false, true, false, true, 0),
+('Jorda', 'Sweet saffron rice cooked with nuts, raisins, and baby sweets.', 140, null, 'c1000000-0000-0000-0000-000000000006', '/Image/amirali-mirhashemian-sc5sTPMrVfk-unsplash.jpg', 4.7, 220, 5, 60, false, true, false, true, 0),
+
+-- Drinks
+('Soft Drinks', 'Chilled carbonated soft drinks served in a glass with ice.', 50, null, 'c1000000-0000-0000-0000-000000000007', '/Image/abhishek-hajare-kkrXVKK-jhg-unsplash.jpg', 4.2, 140, 2, 200, false, true, true, true, 0),
+('Fresh Juice', 'Freshly squeezed pulp juice from sweet seasonal fruits.', 180, 150, 'c1000000-0000-0000-0000-000000000007', '/Image/abhishek-hajare-kkrXVKK-jhg-unsplash.jpg', 4.8, 120, 5, 120, true, true, true, true, 0),
+('Premium Coffee', 'Rich freshly brewed hot black roast from premium espresso beans.', 150, null, 'c1000000-0000-0000-0000-000000000007', '/Image/clay-banks-_wkd7XBRfU4-unsplash.jpg', 4.9, 5, 4, 150, false, true, true, true, 0),
+('Aromatic Tea', 'Traditional spiced masala milk tea brewed with fresh cardamom.', 60, null, 'c1000000-0000-0000-0000-000000000007', '/Image/clay-banks-_wkd7XBRfU4-unsplash.jpg', 4.6, 10, 3, 300, false, true, false, true, 0),
+('Milkshake', 'Rich chocolate milkshake blended with milk and thick vanilla ice cream.', 220, 200, 'c1000000-0000-0000-0000-000000000007', '/Image/abhishek-hajare-kkrXVKK-jhg-unsplash.jpg', 4.8, 380, 6, 90, false, true, false, true, 0),
+('Smoothie', 'Chilled blend of fresh strawberries, bananas, and vanilla yogurt.', 240, null, 'c1000000-0000-0000-0000-000000000007', '/Image/abhishek-hajare-kkrXVKK-jhg-unsplash.jpg', 4.7, 280, 6, 80, false, true, false, true, 0),
+('Mocktails', 'Chilled mint mojito mocktail with fresh lime, mint, and club soda.', 260, null, 'c1000000-0000-0000-0000-000000000007', '/Image/abhishek-hajare-kkrXVKK-jhg-unsplash.jpg', 4.9, 150, 5, 75, true, true, true, true, 0);
 
 -- Insert Coupon Seeds
 INSERT INTO coupons (code, discount, expire_date) VALUES
