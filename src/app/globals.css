@@ -1,0 +1,79 @@
+@import "tailwindcss";
+
+:root {
+  --font-sans: var(--font-manrope), sans-serif;
+  --background: #f0fdf4; /* Light mint green */
+  --foreground: #0f172a; /* Slate 900 */
+  --primary-gradient: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 50%, #d1fae5 100%);
+}
+
+@theme inline {
+  --font-sans: var(--font-sans);
+  --color-brand-dark: #064e3b; /* Deep green */
+  --color-brand-medium: #059669; /* Emerald 600 */
+  --color-brand-accent: #10b981; /* Emerald 500 */
+  --color-brand-pink: #db2777; /* Pink 600 */
+  --color-brand-bg: #f0fdf4;
+}
+
+body {
+  background: var(--background);
+  background-image: var(--primary-gradient);
+  background-attachment: fixed;
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* Light glassmorphism utility classes */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(5, 150, 105, 0.1);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.03);
+}
+
+.glass-panel-hover {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.glass-panel-hover:hover {
+  background: rgba(255, 255, 255, 0.85);
+  border-color: rgba(5, 150, 105, 0.2);
+  transform: translateY(-4px);
+  box-shadow: 0 12px 25px -8px rgba(6, 78, 59, 0.1);
+}
+
+.glass-input {
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(5, 150, 105, 0.2);
+  color: #0f172a;
+  transition: all 0.2s ease-in-out;
+}
+
+.glass-input:focus {
+  background: #ffffff;
+  border-color: #059669; /* Emerald 600 */
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(5, 150, 105, 0.2);
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f0fdf4;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #a7f3d0;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #059669;
+}
