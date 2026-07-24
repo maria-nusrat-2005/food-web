@@ -69,6 +69,7 @@ export default function Home() {
         setActiveCategory={() => {}}
         cartCount={cartCount}
         onCartOpen={() => setIsCartOpen(true)}
+        hideCategories={true}
       />
 
       {/* Hero Interactive Banner Slider */}

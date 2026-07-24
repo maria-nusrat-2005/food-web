@@ -60,6 +60,7 @@ export default function CartPage() {
         setActiveCategory={() => {}}
         cartCount={cart.reduce((acc, item) => acc + item.quantity, 0)}
         onCartOpen={() => setIsCartDrawerOpen(true)}
+        hideCategories={true}
       />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 flex-1 w-full">
