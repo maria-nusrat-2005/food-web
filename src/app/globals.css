@@ -2,20 +2,20 @@
 
 :root {
   --font-sans: var(--font-manrope), sans-serif;
-  --background: #f6fff9; /* Light Mint Green background */
-  --foreground: #64748b; /* Slate 500 body text */
-  --primary-gradient: linear-gradient(135deg, #f6fff9 0%, #ffffff 100%);
+  --background: #FFFDF8; /* Warm Vanilla Ivory background */
+  --foreground: #6b7280; /* Gray 500 body text */
+  --primary-gradient: linear-gradient(135deg, #FFFDF8 0%, #ffffff 100%);
 }
 
 @theme inline {
   --font-sans: var(--font-sans);
-  --color-brand-dark: #1e293b; /* Heading color */
-  --color-brand-medium: #10b981; /* Emerald green primary */
-  --color-brand-accent: #f59e0b; /* Warm gold accent */
-  --color-brand-pink: #f59e0b; /* Remap pink badges to gold accent */
-  --color-brand-bg: #f6fff9;
+  --color-brand-dark: #1f2937; /* Dark slate heading color */
+  --color-brand-medium: #166534; /* Luxury deep green primary */
+  --color-brand-accent: #d4a017; /* Golden secondary/accent */
+  --color-brand-pink: #d4a017; /* Map legacy pink badges to luxury gold */
+  --color-brand-bg: #FFFDF8;
   --color-brand-surface: #ffffff;
-  --color-brand-border: #e2e8f0;
+  --color-brand-border: #e5e7eb;
 }
 
 body {
@@ -28,11 +28,11 @@ body {
   overflow-x: hidden;
 }
 
-/* Polished card layouts matching specified system colors */
+/* Polished card layouts matching specified luxury system colors */
 .glass-panel {
   background: #ffffff; /* Solid White Surface/Card */
-  border: 1px solid #e2e8f0; /* Borders slate */
-  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.02);
+  border: 1px solid #e5e7eb; /* Borders slate */
+  box-shadow: 0 4px 20px rgba(22, 101, 52, 0.015);
 }
 
 .glass-panel-hover {
@@ -41,23 +41,23 @@ body {
 
 .glass-panel-hover:hover {
   background: #ffffff;
-  border-color: #10b981; /* Emerald green on hover */
+  border-color: #d4a017; /* Gold accent border on hover */
   transform: translateY(-4px);
-  box-shadow: 0 12px 24px rgba(16, 185, 129, 0.06);
+  box-shadow: 0 12px 24px rgba(212, 160, 23, 0.08);
 }
 
 .glass-input {
   background: #ffffff;
-  border: 1px solid #e2e8f0;
-  color: #1e293b;
+  border: 1px solid #e5e7eb;
+  color: #1f2937;
   transition: all 0.2s ease-in-out;
 }
 
 .glass-input:focus {
   background: #ffffff;
-  border-color: #10b981; /* Focus border Primary */
+  border-color: #166534; /* Focus border Primary deep green */
   outline: none;
-  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.15);
+  box-shadow: 0 0 0 2px rgba(22, 101, 52, 0.1);
 }
 
 /* Custom Scrollbar */
@@ -66,7 +66,7 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-  background: #f6fff9;
+  background: #FFFDF8;
 }
 
 ::-webkit-scrollbar-thumb {
@@ -75,5 +75,5 @@ body {
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #10b981;
+  background: #166534;
 }
