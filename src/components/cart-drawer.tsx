@@ -27,7 +27,10 @@ export default function CartDrawer({
 
   if (!isOpen) return null;
 
-  const subtotal = cartItems.reduce((acc, item) => acc + item.menuItem.price * item.quantity, 0);
+  const subtotal = cartItems.reduce((acc, item) => {
+    const price = item.food.discount_price !== null ? item.food.discount_price : item.food.price;
+    return acc + price * item.quantity;
+  }, 0);
   const vat = Math.round(subtotal * 0.05); // 5% VAT
   const delivery = subtotal > 0 ? 60 : 0; // 60 Tk flat rate
   const total = subtotal + vat + delivery;
@@ -84,56 +87,59 @@ export default function CartDrawer({
                   </p>
                 </div>
               ) : (
-                cartItems.map((item) => (
-                  <div
-                    key={item.menuItem.id}
-                    className="flex items-center gap-4 bg-slate-50 border border-slate-100 rounded-xl p-3.5 hover:border-emerald-100/50 transition-colors"
-                  >
-                    <img
-                      src={item.menuItem.image_url || '/Image/amirali-mirhashemian-sc5sTPMrVfk-unsplash.jpg'}
-                      alt={item.menuItem.name}
-                      className="w-16 h-16 rounded-lg object-cover bg-slate-100 flex-shrink-0"
-                    />
-                    <div className="flex-1 min-w-0">
-                      <h4 className="text-sm font-bold text-slate-800 truncate">{item.menuItem.name}</h4>
-                      <p className="text-xs text-brand-medium font-bold mt-0.5">
-                        {item.menuItem.price} Tk
-                      </p>
-                      {/* Quantity Controls */}
-                      <div className="flex items-center gap-3 mt-2">
-                        <button
-                          onClick={() => onUpdateQuantity(item.menuItem.id, item.quantity - 1)}
-                          className="p-1 rounded-md bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 cursor-pointer"
-                        >
-                          <Minus className="h-3 w-3" />
-                        </button>
-                        <span className="text-xs font-bold text-slate-800 min-w-[12px] text-center">
-                          {item.quantity}
-                        </span>
-                        <button
-                          onClick={() => onUpdateQuantity(item.menuItem.id, item.quantity + 1)}
-                          className="p-1 rounded-md bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 cursor-pointer"
-                        >
-                          <Plus className="h-3 w-3" />
-                        </button>
-                      </div>
-                    </div>
-                    <button
-                      onClick={() => onRemoveItem(item.menuItem.id)}
-                      className="p-2 text-slate-400 hover:text-rose-500 rounded-lg hover:bg-slate-100 transition-colors cursor-pointer"
-                      title="Remove item"
+                cartItems.map((item) => {
+                  const price = item.food.discount_price !== null ? item.food.discount_price : item.food.price;
+                  return (
+                    <div
+                      key={item.food.id}
+                      className="flex items-center gap-4 bg-slate-50 border border-slate-100 rounded-xl p-3.5 hover:border-emerald-100/50 transition-colors"
                     >
-                      <Trash2 className="h-4.5 w-4.5" />
-                    </button>
-                  </div>
-                ))
+                      <img
+                        src={item.food.image || '/Image/amirali-mirhashemian-sc5sTPMrVfk-unsplash.jpg'}
+                        alt={item.food.title}
+                        className="w-16 h-16 rounded-lg object-cover bg-slate-100 flex-shrink-0"
+                      />
+                      <div className="flex-1 min-w-0">
+                        <h4 className="text-sm font-bold text-slate-800 truncate">{item.food.title}</h4>
+                        <p className="text-xs text-brand-medium font-bold mt-0.5">
+                          {price} Tk
+                        </p>
+                        {/* Quantity Controls */}
+                        <div className="flex items-center gap-3 mt-2">
+                          <button
+                            onClick={() => onUpdateQuantity(item.food.id, item.quantity - 1)}
+                            className="p-1 rounded-md bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 cursor-pointer"
+                          >
+                            <Minus className="h-3 w-3" />
+                          </button>
+                          <span className="text-xs font-bold text-slate-800 min-w-[12px] text-center">
+                            {item.quantity}
+                          </span>
+                          <button
+                            onClick={() => onUpdateQuantity(item.food.id, item.quantity + 1)}
+                            className="p-1 rounded-md bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 cursor-pointer"
+                          >
+                            <Plus className="h-3 w-3" />
+                          </button>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => onRemoveItem(item.food.id)}
+                        className="p-2 text-slate-400 hover:text-rose-500 rounded-lg hover:bg-slate-100 transition-colors cursor-pointer"
+                        title="Remove item"
+                      >
+                        <Trash2 className="h-4.5 w-4.5" />
+                      </button>
+                    </div>
+                  );
+                })
               )}
             </div>
 
             {/* Footer Calculation */}
             {cartItems.length > 0 && (
               <div className="border-t border-slate-100 px-6 py-6 bg-slate-50/50">
-                <div className="space-y-2.5 text-sm text-slate-600">
+                <div className="space-y-2.5 text-sm text-slate-650">
                   <div className="flex justify-between">
                     <span>Subtotal</span>
                     <span className="text-slate-800 font-semibold">{subtotal} Tk</span>
@@ -146,7 +152,7 @@ export default function CartDrawer({
                     <span>Delivery Fee</span>
                     <span className="text-slate-800 font-semibold">{delivery} Tk</span>
                   </div>
-                  <div className="flex justify-between text-base font-extrabold text-slate-800 pt-2.5 border-t border-slate-200">
+                  <div className="flex justify-between text-base font-extrabold text-slate-850 pt-2.5 border-t border-slate-200">
                     <span>Total Amount</span>
                     <span className="text-brand-medium">{total} Tk</span>
                   </div>
