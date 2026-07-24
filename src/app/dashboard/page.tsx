@@ -21,6 +21,17 @@ export default function UserDashboardPage() {
     setOrders(history);
   }, []);
 
+  // Load active tab from URL query params
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const tab = params.get('tab');
+      if (tab === 'orders' || tab === 'wishlist' || tab === 'points' || tab === 'reservations' || tab === 'profile') {
+        setActiveTab(tab as any);
+      }
+    }
+  }, []);
+
   if (!profile) return null;
 
   // Filter wishlisted food objects
