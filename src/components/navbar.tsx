@@ -63,7 +63,7 @@ export default function Navbar({
             <div className="hidden lg:flex items-center space-x-6">
               <Link href="/" className="text-sm font-bold text-slate-700 hover:text-brand-medium transition-all">Home</Link>
               <Link href="/menu" className="text-sm font-bold text-slate-700 hover:text-brand-medium transition-all">Menu</Link>
-              <Link href="/dashboard?tab=orders" className="text-sm font-bold text-slate-700 hover:text-brand-medium transition-all">My Orders</Link>
+              <Link href="/my-orders" className="text-sm font-bold text-slate-700 hover:text-brand-medium transition-all">My Orders</Link>
               <Link href="/about" className="text-sm font-bold text-slate-700 hover:text-brand-medium transition-all">Bookings</Link>
               <Link href="/contact" className="text-sm font-bold text-slate-700 hover:text-brand-medium transition-all">Support</Link>
               <Link href="/dashboard" className="text-sm font-bold text-slate-700 hover:text-brand-medium transition-all">Dashboard</Link>
@@ -179,7 +179,7 @@ export default function Navbar({
           <div className="flex flex-col gap-2 border-b border-slate-100 pb-3">
             <Link href="/" className="px-4 py-2 text-xs font-bold text-slate-700 hover:bg-slate-100 rounded-xl">Home</Link>
             <Link href="/menu" className="px-4 py-2 text-xs font-bold text-slate-700 hover:bg-slate-100 rounded-xl">Menu</Link>
-            <Link href="/dashboard?tab=orders" className="px-4 py-2 text-xs font-bold text-slate-700 hover:bg-slate-100 rounded-xl">My Orders</Link>
+            <Link href="/my-orders" className="px-4 py-2 text-xs font-bold text-slate-700 hover:bg-slate-100 rounded-xl">My Orders</Link>
             <Link href="/about" className="px-4 py-2 text-xs font-bold text-slate-700 hover:bg-slate-100 rounded-xl">Bookings</Link>
             <Link href="/contact" className="px-4 py-2 text-xs font-bold text-slate-700 hover:bg-slate-100 rounded-xl">Support</Link>
             <Link href="/dashboard" className="px-4 py-2 text-xs font-bold text-slate-700 hover:bg-slate-100 rounded-xl">Dashboard</Link>
