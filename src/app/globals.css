@@ -2,18 +2,20 @@
 
 :root {
   --font-sans: var(--font-manrope), sans-serif;
-  --background: #f0fdf4; /* Light mint green */
-  --foreground: #0f172a; /* Slate 900 */
-  --primary-gradient: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 50%, #d1fae5 100%);
+  --background: #f6fff9; /* Light Mint Green background */
+  --foreground: #64748b; /* Slate 500 body text */
+  --primary-gradient: linear-gradient(135deg, #f6fff9 0%, #ffffff 100%);
 }
 
 @theme inline {
   --font-sans: var(--font-sans);
-  --color-brand-dark: #064e3b; /* Deep green */
-  --color-brand-medium: #059669; /* Emerald 600 */
-  --color-brand-accent: #10b981; /* Emerald 500 */
-  --color-brand-pink: #db2777; /* Pink 600 */
-  --color-brand-bg: #f0fdf4;
+  --color-brand-dark: #1e293b; /* Heading color */
+  --color-brand-medium: #10b981; /* Emerald green primary */
+  --color-brand-accent: #f59e0b; /* Warm gold accent */
+  --color-brand-pink: #f59e0b; /* Remap pink badges to gold accent */
+  --color-brand-bg: #f6fff9;
+  --color-brand-surface: #ffffff;
+  --color-brand-border: #e2e8f0;
 }
 
 body {
@@ -26,13 +28,11 @@ body {
   overflow-x: hidden;
 }
 
-/* Light glassmorphism utility classes */
+/* Polished card layouts matching specified system colors */
 .glass-panel {
-  background: rgba(255, 255, 255, 0.7);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(5, 150, 105, 0.1);
-  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.03);
+  background: #ffffff; /* Solid White Surface/Card */
+  border: 1px solid #e2e8f0; /* Borders slate */
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.02);
 }
 
 .glass-panel-hover {
@@ -40,24 +40,24 @@ body {
 }
 
 .glass-panel-hover:hover {
-  background: rgba(255, 255, 255, 0.85);
-  border-color: rgba(5, 150, 105, 0.2);
+  background: #ffffff;
+  border-color: #10b981; /* Emerald green on hover */
   transform: translateY(-4px);
-  box-shadow: 0 12px 25px -8px rgba(6, 78, 59, 0.1);
+  box-shadow: 0 12px 24px rgba(16, 185, 129, 0.06);
 }
 
 .glass-input {
-  background: rgba(255, 255, 255, 0.9);
-  border: 1px solid rgba(5, 150, 105, 0.2);
-  color: #0f172a;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  color: #1e293b;
   transition: all 0.2s ease-in-out;
 }
 
 .glass-input:focus {
   background: #ffffff;
-  border-color: #059669; /* Emerald 600 */
+  border-color: #10b981; /* Focus border Primary */
   outline: none;
-  box-shadow: 0 0 0 2px rgba(5, 150, 105, 0.2);
+  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.15);
 }
 
 /* Custom Scrollbar */
@@ -66,14 +66,14 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-  background: #f0fdf4;
+  background: #f6fff9;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #a7f3d0;
+  background: #cbd5e1;
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #059669;
+  background: #10b981;
 }
