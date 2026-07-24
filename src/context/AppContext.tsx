@@ -214,7 +214,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       if (!isMockUser && profile) {
         const { error } = await supabase.from('reservations').insert([
           {
-            id: resId,
             user_id: profile.id,
             name,
             phone,

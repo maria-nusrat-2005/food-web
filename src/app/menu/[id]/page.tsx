@@ -9,12 +9,16 @@ import CartDrawer from '@/components/cart-drawer';
 import ReviewSection from '@/components/review-section';
 import { useParams, useRouter } from 'next/navigation';
 import { ArrowLeft, Clock, Flame, ShieldAlert, Heart, Star, ShoppingCart, CreditCard } from 'lucide-react';
-import Link from 'next/link';
+import { useAuth } from '@/context/AuthContext';
+import { supabase } from '@/lib/supabase';
 import { Food, MenuItem } from '@/types';
+
+import Link from 'next/link';
 
 export default function ProductDetailPage() {
   const params = useParams();
   const router = useRouter();
+  const { profile, isMockUser } = useAuth();
   const { foods, toggleFavorite, isFavorite } = useApp();
   const { addToCart, cart, updateQuantity, removeFromCart, clearCart } = useCart();
 
@@ -52,9 +56,26 @@ export default function ProductDetailPage() {
   const isFav = isFavorite(food.id);
   const cartCount = cart.reduce((acc, item) => acc + item.quantity, 0);
 
-  // Mock submit review for this dish specifically
+  // Submit review for this dish
   const handleReviewSubmission = async (name: string, rating: number, comment: string) => {
-    // Return true locally
+    try {
+      if (!isMockUser && profile && food) {
+        const { error } = await supabase.from('reviews').insert([
+          {
+            food_id: food.id,
+            user_id: profile.id,
+            client_name: name,
+            avatar_url: profile.avatar_url,
+            rating,
+            comment,
+          },
+        ]);
+        if (error) throw error;
+        return { success: true, isLocalOnly: false };
+      }
+    } catch (err) {
+      console.error('Failed to submit review to Supabase:', err);
+    }
     return { success: true, isLocalOnly: true };
   };
 

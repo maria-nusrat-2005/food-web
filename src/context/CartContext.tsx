@@ -153,9 +153,11 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   ): Promise<{ success: boolean; orderId: string | null }> => {
     if (cart.length === 0) return { success: false, orderId: null };
 
-    const orderId = `ord-${Date.now()}`;
+    const fallbackOrderId = `ord-${Date.now()}`;
+    let finalOrderId = fallbackOrderId;
+
     const newOrder: Order = {
-      id: orderId,
+      id: fallbackOrderId,
       user_id: profile?.id || null,
       status: 'received',
       total,
@@ -170,27 +172,33 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
     try {
       if (!isMockUser && profile) {
-        // 1. Insert order record into database
-        const { error: orderErr } = await supabase.from('orders').insert([
-          {
-            id: orderId,
-            user_id: profile.id,
-            status: 'received',
-            total,
-            payment_method: paymentMethod,
-            address,
-            phone,
-            notes: notes || null,
-            discount_applied: discount,
-            code_used: couponCode || null,
-          },
-        ]);
+        // 1. Insert order record into database and fetch back the server-generated UUID
+        const { data: dbOrder, error: orderErr } = await supabase
+          .from('orders')
+          .insert([
+            {
+              user_id: profile.id,
+              status: 'received',
+              total,
+              payment_method: paymentMethod,
+              address,
+              phone,
+              notes: notes || null,
+              discount_applied: discount,
+              code_used: couponCode || null,
+            },
+          ])
+          .select('id')
+          .single();
 
         if (orderErr) throw orderErr;
+        if (!dbOrder) throw new Error('Failed to retrieve order ID from database');
+        
+        finalOrderId = dbOrder.id;
 
         // 2. Insert order items
         const orderItemsData = cart.map((ci) => ({
-          order_id: orderId,
+          order_id: finalOrderId,
           food_id: ci.food.id,
           quantity: ci.quantity,
           price: ci.food.discount_price !== null ? ci.food.discount_price : ci.food.price,
@@ -204,7 +212,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
           {
             user_id: profile.id,
             title: 'Order Received!',
-            message: `Your order #${orderId.substring(0, 8)} of ${total} Tk has been placed.`,
+            message: `Your order #${finalOrderId.substring(0, 8)} of ${total} Tk has been placed.`,
           },
         ]);
       } else {
@@ -226,14 +234,14 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       });
 
       clearCart();
-      return { success: true, orderId };
+      return { success: true, orderId: finalOrderId };
     } catch (e) {
       console.error('Order insertion failed', e);
       // Fallback local placement
       const mockHistory = JSON.parse(localStorage.getItem('flavor_haven_orders') || '[]');
       localStorage.setItem('flavor_haven_orders', JSON.stringify([newOrder, ...mockHistory]));
       clearCart();
-      return { success: true, orderId };
+      return { success: true, orderId: finalOrderId };
     }
   };
 

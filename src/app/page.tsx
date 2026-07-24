@@ -10,11 +10,12 @@ import CartDrawer from '@/components/cart-drawer';
 import ReviewSection from '@/components/review-section';
 import { ArrowRight, Sparkles, ChefHat, Award, ShieldCheck, ChevronLeft, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
+import { supabase } from '@/lib/supabase';
 
 export default function Home() {
   const { foods, toggleFavorite, isFavorite, isSupabaseConnected } = useApp();
   const { addToCart, cart, updateQuantity, removeFromCart, clearCart } = useCart();
-  const { profile } = useAuth();
+  const { profile, isMockUser } = useAuth();
   
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [activeBannerIdx, setActiveBannerIdx] = useState(0);
@@ -42,8 +43,26 @@ export default function Home() {
     setActiveBannerIdx((prev) => (prev + 1) % banners.length);
   };
 
-  // Mock submit review fallback
+  // Submit general review
   const handleReviewSubmission = async (name: string, rating: number, comment: string) => {
+    try {
+      if (!isMockUser && profile) {
+        const { error } = await supabase.from('reviews').insert([
+          {
+            food_id: null,
+            user_id: profile.id,
+            client_name: name,
+            avatar_url: profile.avatar_url,
+            rating,
+            comment,
+          },
+        ]);
+        if (error) throw error;
+        return { success: true, isLocalOnly: false };
+      }
+    } catch (err) {
+      console.error('Failed to submit review to Supabase:', err);
+    }
     return { success: true, isLocalOnly: true };
   };
 
