@@ -3,6 +3,7 @@ import { Manrope } from "next/font/google";
 import { AuthProvider } from "@/context/AuthContext";
 import { CartProvider } from "@/context/CartContext";
 import { AppProvider } from "@/context/AppContext";
+import AuthModal from "@/components/auth-modal";
 import "./globals.css";
 
 const manrope = Manrope({
@@ -28,6 +29,7 @@ export default function RootLayout({
           <CartProvider>
             <AppProvider>
               {children}
+              <AuthModal />
             </AppProvider>
           </CartProvider>
         </AuthProvider>

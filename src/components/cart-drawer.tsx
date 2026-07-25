@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { X, Plus, Minus, Trash2, ShoppingBag, CreditCard, Sparkles } from 'lucide-react';
 import { CartItem } from '@/types';
+import { useAuth } from '@/context/AuthContext';
 import confetti from 'canvas-confetti';
 
 interface CartDrawerProps {
@@ -24,6 +25,7 @@ export default function CartDrawer({
 }: CartDrawerProps) {
   const [checkingOut, setCheckingOut] = useState(false);
   const [successModal, setSuccessModal] = useState(false);
+  const { profile, openAuthModal } = useAuth();
 
   if (!isOpen) return null;
 
@@ -36,6 +38,12 @@ export default function CartDrawer({
   const total = subtotal + vat + delivery;
 
   const handleCheckout = () => {
+    if (!profile) {
+      onClose(); // Close cart drawer so Auth modal is visible
+      openAuthModal();
+      return;
+    }
+
     setCheckingOut(true);
     setTimeout(() => {
       setCheckingOut(false);

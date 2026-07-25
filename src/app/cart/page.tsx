@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { useCart } from '@/context/CartContext';
+import { useAuth } from '@/context/AuthContext';
 import Navbar from '@/components/navbar';
 import CartDrawer from '@/components/cart-drawer';
 import { ShoppingBag, Trash2, Plus, Minus, Ticket, Sparkles, CreditCard, ArrowLeft } from 'lucide-react';
@@ -24,6 +25,7 @@ export default function CartPage() {
     clearCart,
   } = useCart();
 
+  const { profile, openAuthModal } = useAuth();
   const [couponInput, setCouponInput] = useState('');
   const [couponMsg, setCouponMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [isSubmittingCoupon, setIsSubmittingCoupon] = useState(false);
@@ -48,7 +50,11 @@ export default function CartPage() {
   };
 
   const handleCheckoutRedirect = () => {
-    router.push('/checkout');
+    if (!profile) {
+      openAuthModal();
+    } else {
+      router.push('/checkout');
+    }
   };
 
   return (

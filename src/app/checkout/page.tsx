@@ -13,12 +13,14 @@ export default function CheckoutPage() {
   const { profile } = useAuth();
   const router = useRouter();
 
-  // Redirect if cart is empty
+  // Redirect if not logged in or cart is empty
   useEffect(() => {
-    if (cart.length === 0) {
+    if (!profile) {
+      router.push('/?openAuth=true');
+    } else if (cart.length === 0) {
       router.push('/cart');
     }
-  }, [cart, router]);
+  }, [profile, cart, router]);
 
   // Form states
   const [name, setName] = useState(profile?.name || '');

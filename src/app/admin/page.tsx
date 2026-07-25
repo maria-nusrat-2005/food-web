@@ -6,15 +6,24 @@ import { useApp } from '@/context/AppContext';
 import Navbar from '@/components/navbar';
 import { ShieldAlert, RefreshCw, BarChart3, TrendingUp, DollarSign, ShoppingBag, Calendar, Users, Key, Utensils, ClipboardList } from 'lucide-react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Order, Reservation } from '@/types';
 import { supabase } from '@/lib/supabase';
 
 export default function AdminDashboardPage() {
-  const { profile, toggleMockRole, isMockUser } = useAuth();
+  const router = useRouter();
+  const { profile, toggleMockRole, isMockUser, loading: authLoading } = useAuth();
   const { getReservations } = useApp();
   const [orders, setOrders] = useState<Order[]>([]);
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Client-side route guard: Redirect guest to login
+  useEffect(() => {
+    if (!authLoading && !profile) {
+      router.push('/login?redirect=/admin');
+    }
+  }, [profile, authLoading, router]);
 
   // Fetch data
   useEffect(() => {
@@ -44,6 +53,15 @@ export default function AdminDashboardPage() {
     }
   }, [profile, getReservations]);
 
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex flex-col justify-center items-center bg-[#f0fdf4]">
+        <RefreshCw className="h-8 w-8 text-brand-medium animate-spin" />
+        <p className="text-xs font-bold text-slate-500 mt-3">Verifying privileges...</p>
+      </div>
+    );
+  }
+
   // Security gate
   if (profile?.role !== 'admin') {
     return (
@@ -54,16 +72,19 @@ export default function AdminDashboardPage() {
           You need Admin privileges to view this management console. (Currently signed in as: {profile?.role || 'Guest'})
         </p>
         <div className="flex gap-3 mt-6">
-          <button
-            onClick={toggleMockRole}
-            className="px-5 py-2.5 bg-slate-800 hover:bg-slate-900 text-white font-bold rounded-xl text-xs flex items-center gap-1.5 cursor-pointer"
-          >
-            <RefreshCw className="h-3.5 w-3.5" />
-            <span>Switch to Admin Profile</span>
-          </button>
-          <Link href="/" className="px-5 py-2.5 bg-brand-medium text-white font-bold rounded-xl text-xs">
-            Return Home
-          </Link>
+          {isMockUser ? (
+            <button
+              onClick={toggleMockRole}
+              className="px-5 py-2.5 bg-slate-800 hover:bg-slate-900 text-white font-bold rounded-xl text-xs flex items-center gap-1.5 cursor-pointer border-0"
+            >
+              <RefreshCw className="h-3.5 w-3.5" />
+              <span>Switch to Admin Profile</span>
+            </button>
+          ) : (
+            <Link href="/" className="px-5 py-2.5 bg-brand-medium text-white font-bold rounded-xl text-xs cursor-pointer">
+              Return Home
+            </Link>
+          )}
         </div>
       </div>
     );

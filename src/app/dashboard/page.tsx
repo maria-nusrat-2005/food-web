@@ -6,13 +6,22 @@ import { useApp } from '@/context/AppContext';
 import Navbar from '@/components/navbar';
 import { User, ShoppingBag, Heart, Award, Calendar, RefreshCw, Key, ShieldCheck, Mail, Phone, CalendarCheck } from 'lucide-react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Order } from '@/types';
 
 export default function UserDashboardPage() {
-  const { profile, toggleMockRole, isMockUser } = useAuth();
+  const router = useRouter();
+  const { profile, toggleMockRole, isMockUser, loading } = useAuth();
   const { foods, favorites, toggleFavorite, getReservations } = useApp();
   const [orders, setOrders] = useState<Order[]>([]);
   const [activeTab, setActiveTab] = useState<'profile' | 'orders' | 'wishlist' | 'points' | 'reservations'>('profile');
+
+  // Client-side route guard
+  useEffect(() => {
+    if (!loading && !profile) {
+      router.push('/login?redirect=/dashboard');
+    }
+  }, [profile, loading, router]);
 
   // Load Order History
   useEffect(() => {
@@ -31,6 +40,15 @@ export default function UserDashboardPage() {
       }
     }
   }, []);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex flex-col justify-center items-center bg-[#f0fdf4]">
+        <RefreshCw className="h-8 w-8 text-brand-medium animate-spin" />
+        <p className="text-xs font-bold text-slate-500 mt-3">Loading your dashboard...</p>
+      </div>
+    );
+  }
 
   if (!profile) return null;
 
