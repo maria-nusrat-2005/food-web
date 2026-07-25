@@ -7,6 +7,7 @@ import { useCart } from '@/context/CartContext';
 import { Phone, Mail, MapPin, Send, HelpCircle, ArrowDown, Heart } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useEffect } from 'react';
+import { useAuth } from '@/context/AuthContext';
 
 const FAQS = [
   { q: 'What areas do you deliver to?', a: 'Currently, we offer 20-minute deliveries within Dhanmondi, Lalmatia, Gulshan, Banani, and Uttara in Dhaka. We are planning to expand to more zones soon!' },
@@ -17,6 +18,7 @@ const FAQS = [
 
 export default function ContactPage() {
   const { cart, updateQuantity, removeFromCart, clearCart } = useCart();
+  const { profile } = useAuth();
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [activeFaq, setActiveFaq] = useState<number | null>(null);
 
@@ -25,6 +27,13 @@ export default function ContactPage() {
   const [email, setEmail] = useState('');
   const [msg, setMsg] = useState('');
   const [submitted, setSubmitted] = useState(false);
+
+  useEffect(() => {
+    if (profile) {
+      setName(profile.name || '');
+      setEmail(profile.email || '');
+    }
+  }, [profile]);
 
   // Dynamic Contact Info states (with default placeholders)
   const [phone, setPhone] = useState('+880 1712-345678');
@@ -67,19 +76,24 @@ export default function ContactPage() {
     try {
       const { error } = await supabase
         .from('support_queries')
-        .insert([{ name, email, message: msg }]);
+        .insert([{ 
+          name, 
+          email, 
+          message: msg,
+          user_id: profile ? profile.id : null 
+        }]);
 
       if (error) throw error;
       setSubmitted(true);
-      setName('');
-      setEmail('');
+      setName(profile?.name || '');
+      setEmail(profile?.email || '');
       setMsg('');
       setTimeout(() => setSubmitted(false), 5000);
     } catch (err) {
       console.warn('DB query submission failed. Mocking local success.', err);
       setSubmitted(true);
-      setName('');
-      setEmail('');
+      setName(profile?.name || '');
+      setEmail(profile?.email || '');
       setMsg('');
       setTimeout(() => setSubmitted(false), 5000);
     }

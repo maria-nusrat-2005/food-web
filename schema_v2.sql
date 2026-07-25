@@ -306,6 +306,7 @@ ALTER TABLE reviews ADD COLUMN IF NOT EXISTS admin_reply TEXT;
 -- Migration: Create support_queries table
 CREATE TABLE IF NOT EXISTS support_queries (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID,
     name TEXT NOT NULL,
     email TEXT NOT NULL,
     message TEXT NOT NULL,
