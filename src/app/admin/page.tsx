@@ -24,7 +24,8 @@ import {
   Mail,
   Star,
   Layers,
-  Heart
+  Heart,
+  LogOut
 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -35,7 +36,7 @@ const ORDER_STATUS_OPTIONS = ['received', 'preparing', 'cooking', 'delivery', 'd
 
 export default function AdminConsolePage() {
   const router = useRouter();
-  const { profile, loading: authLoading, adminViewMode, toggleAdminViewMode } = useAuth();
+  const { profile, loading: authLoading, adminViewMode, toggleAdminViewMode, signOut } = useAuth();
   const { foods, categories, refreshFoods, refreshCategories, isSupabaseConnected } = useApp();
 
   const [activeTab, setActiveTab] = useState<'overview' | 'foods' | 'categories' | 'orders' | 'reviews' | 'users' | 'queries'>('overview');
@@ -427,13 +428,23 @@ export default function AdminConsolePage() {
             <p className="text-slate-500 text-sm mt-1">Manage food menus, categories, live orders, customer reviews, and support queries.</p>
           </div>
 
-          <button
-            onClick={toggleAdminViewMode}
-            className="px-4 py-2 bg-slate-800 hover:bg-slate-900 text-white rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer border-0 shadow-sm"
-          >
-            <RefreshCw className="h-3.5 w-3.5" />
-            <span>Switch to Customer View</span>
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={toggleAdminViewMode}
+              className="px-4 py-2 bg-slate-800 hover:bg-slate-900 text-white rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer border-0 shadow-sm"
+            >
+              <RefreshCw className="h-3.5 w-3.5" />
+              <span>Switch to Customer View</span>
+            </button>
+
+            <button
+              onClick={signOut}
+              className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer border-0 shadow-sm"
+            >
+              <LogOut className="h-3.5 w-3.5" />
+              <span>Log Out</span>
+            </button>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
