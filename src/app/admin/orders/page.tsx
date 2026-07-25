@@ -6,14 +6,33 @@ import { useApp } from '@/context/AppContext';
 import Navbar from '@/components/navbar';
 import { ShieldAlert, RefreshCw, AlertCircle, ShoppingBag, ArrowUpDown, ChevronDown, Check } from 'lucide-react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Order } from '@/types';
 import { supabase } from '@/lib/supabase';
 
 const STATUS_OPTIONS = ['received', 'preparing', 'cooking', 'delivery', 'delivered', 'cancelled'];
 
 export default function AdminOrdersPage() {
-  const { profile, toggleMockRole } = useAuth();
+  const { profile, toggleMockRole, loading: authLoading } = useAuth();
   const { isSupabaseConnected } = useApp();
+  const router = useRouter();
+
+  // Route guard: Redirect guest to homepage and pop Auth Modal
+  useEffect(() => {
+    if (!authLoading && !profile) {
+      router.push('/?openAuth=true&redirect=/admin/orders');
+    }
+  }, [profile, authLoading, router]);
+
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex flex-col justify-center items-center bg-[#f0fdf4]">
+        <RefreshCw className="h-8 w-8 text-brand-medium animate-spin" />
+        <p className="text-xs font-bold text-slate-500 mt-3">Verifying privileges...</p>
+      </div>
+    );
+  }
+
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
 

@@ -295,5 +295,7 @@ ON CONFLICT (code) DO NOTHING;
 -- Insert Banner Seeds
 INSERT INTO banners (title, image, link, active) VALUES
 ('20% Off on Special Coffee!', '/Image/clay-banks-_wkd7XBRfU4-unsplash.jpg', '/menu', true),
-('Try our Beef Naga Spicy Burger', '/Image/amirali-mirhashemian-sc5sTPMrVfk-unsplash.jpg', '/menu', true),
 ('Refreshing Watermelon Blends', '/Image/rohollah-saberi-21QZGQKpOYE-unsplash.jpg', '/menu', true);
+
+-- Helper script to promote a user to admin in the database:
+-- UPDATE profiles SET role = 'admin' WHERE email = 'your-email@example.com';

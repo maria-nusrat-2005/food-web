@@ -18,10 +18,10 @@ export default function AdminDashboardPage() {
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Client-side route guard: Redirect guest to login
+  // Client-side route guard: Redirect guest to homepage and pop Auth Modal
   useEffect(() => {
     if (!authLoading && !profile) {
-      router.push('/login?redirect=/admin');
+      router.push('/?openAuth=true&redirect=/admin');
     }
   }, [profile, authLoading, router]);
 

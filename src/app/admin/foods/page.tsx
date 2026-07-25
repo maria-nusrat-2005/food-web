@@ -1,17 +1,35 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useApp } from '@/context/AppContext';
 import Navbar from '@/components/navbar';
 import { ShieldAlert, RefreshCw, Plus, Edit2, Trash2, X, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Food } from '@/types';
 import { supabase } from '@/lib/supabase';
 
 export default function AdminFoodsPage() {
-  const { profile, toggleMockRole } = useAuth();
+  const { profile, toggleMockRole, loading: authLoading } = useAuth();
   const { foods, categories, isSupabaseConnected } = useApp();
+  const router = useRouter();
+
+  // Route guard: Redirect guest to homepage and pop Auth Modal
+  useEffect(() => {
+    if (!authLoading && !profile) {
+      router.push('/?openAuth=true&redirect=/admin/foods');
+    }
+  }, [profile, authLoading, router]);
+
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex flex-col justify-center items-center bg-[#f0fdf4]">
+        <RefreshCw className="h-8 w-8 text-brand-medium animate-spin" />
+        <p className="text-xs font-bold text-slate-500 mt-3">Verifying privileges...</p>
+      </div>
+    );
+  }
 
   const [localFoods, setLocalFoods] = useState<Food[]>(foods);
   const [modalOpen, setModalOpen] = useState(false);

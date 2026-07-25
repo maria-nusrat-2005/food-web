@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { Mail, Lock, User as UserIcon, X, ArrowRight, RefreshCw, AlertCircle, CheckCircle, Sparkles } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 export default function AuthModal() {
   const {
@@ -14,6 +15,17 @@ export default function AuthModal() {
     isMockUser,
     toggleMockAuthMode
   } = useAuth();
+  const router = useRouter();
+
+  const performRedirect = () => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const redirect = params.get('redirect');
+      if (redirect) {
+        router.push(redirect);
+      }
+    }
+  };
 
   const [authTab, setAuthTab] = useState<'signin' | 'signup'>('signin');
   const [activeTab, setActiveTab] = useState<'password' | 'otp'>('password');
@@ -71,6 +83,7 @@ export default function AuthModal() {
             setSuccess('Welcome back! Successfully logged in.');
             setTimeout(() => {
               handleClose();
+              performRedirect();
             }, 1200);
           } else {
             setError(res.error || 'Failed to sign in. Check details.');
@@ -82,6 +95,7 @@ export default function AuthModal() {
             if (isMockUser) {
               setTimeout(() => {
                 handleClose();
+                performRedirect();
               }, 1200);
             }
           } else {
@@ -100,6 +114,7 @@ export default function AuthModal() {
           setSuccess('Account created successfully! Logging in...');
           setTimeout(() => {
             handleClose();
+            performRedirect();
           }, 1200);
         } else {
           setError(res.error || 'Registration failed.');
