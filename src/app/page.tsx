@@ -292,7 +292,7 @@ export default function Home() {
           <div className="flex gap-4">
             <Link href="/about" className="hover:text-brand-medium transition-colors">About Us</Link>
             <Link href="/contact" className="hover:text-brand-medium transition-colors">Contact Support</Link>
-            <Link href="/dashboard" className="hover:text-brand-medium transition-colors">User Panel</Link>
+            <a href="https://maps.google.com" target="_blank" rel="noopener noreferrer" className="hover:text-brand-medium transition-colors">Find Us on Map</a>
           </div>
         </div>
       </footer>
