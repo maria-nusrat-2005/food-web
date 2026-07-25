@@ -188,7 +188,11 @@ export default function AuthModal() {
             </span>
           </div>
           <button
-            onClick={toggleMockAuthMode}
+            onClick={() => {
+              toggleMockAuthMode();
+              setError(null);
+              setSuccess(null);
+            }}
             type="button"
             className="px-2.5 py-1 bg-slate-800 hover:bg-slate-900 text-white rounded-lg text-[9px] font-extrabold transition-all flex items-center gap-1 cursor-pointer border-0"
           >
@@ -196,6 +200,21 @@ export default function AuthModal() {
             <span>Switch</span>
           </button>
         </div>
+
+        {/* Mock Mode Credentials Tip */}
+        {isMockUser && (
+          <div className="mb-5 p-3.5 bg-amber-500/10 border border-amber-500/20 rounded-2xl text-xs text-amber-800 space-y-1 animate-in slide-in-from-top duration-200">
+            <p className="font-extrabold flex items-center gap-1">
+              <span>💡 Mock Mode Tips</span>
+            </p>
+            <p className="text-[11px] leading-relaxed opacity-90">
+              Enter <strong>any email and password</strong> to log in instantly.
+            </p>
+            <p className="text-[11px] leading-relaxed opacity-90">
+              Use <strong><code>admin@flavorhaven.com</code></strong> for Admin access.
+            </p>
+          </div>
+        )}
 
         {/* Mode Toggle Selector: Sign In / Sign Up */}
         {!isMockUser && (
