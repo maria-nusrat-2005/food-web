@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { Mail, Lock, User as UserIcon, X, ArrowRight, RefreshCw, AlertCircle, CheckCircle, Sparkles } from 'lucide-react';
 import { useRouter } from 'next/navigation';
@@ -29,6 +29,12 @@ export default function AuthModal() {
 
   const [authTab, setAuthTab] = useState<'signin' | 'signup'>('signin');
   const [activeTab, setActiveTab] = useState<'password' | 'otp'>('password');
+
+  useEffect(() => {
+    if (isMockUser) {
+      setAuthTab('signin');
+    }
+  }, [isMockUser]);
   
   // Input fields
   const [name, setName] = useState('');
@@ -192,34 +198,36 @@ export default function AuthModal() {
         </div>
 
         {/* Mode Toggle Selector: Sign In / Sign Up */}
-        <div className="flex bg-slate-100 p-1.5 rounded-2xl mb-5 text-xs font-bold text-slate-500">
-          <button
-            type="button"
-            onClick={() => {
-              setAuthTab('signin');
-              setError(null);
-              setSuccess(null);
-            }}
-            className={`flex-1 py-2 rounded-xl transition-all cursor-pointer border-0 ${
-              authTab === 'signin' ? 'bg-white text-slate-850 shadow-sm font-extrabold' : 'hover:text-slate-800 bg-transparent'
-            }`}
-          >
-            Sign In
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              setAuthTab('signup');
-              setError(null);
-              setSuccess(null);
-            }}
-            className={`flex-1 py-2 rounded-xl transition-all cursor-pointer border-0 ${
-              authTab === 'signup' ? 'bg-white text-slate-850 shadow-sm font-extrabold' : 'hover:text-slate-800 bg-transparent'
-            }`}
-          >
-            Sign Up
-          </button>
-        </div>
+        {!isMockUser && (
+          <div className="flex bg-slate-100 p-1.5 rounded-2xl mb-5 text-xs font-bold text-slate-500">
+            <button
+              type="button"
+              onClick={() => {
+                setAuthTab('signin');
+                setError(null);
+                setSuccess(null);
+              }}
+              className={`flex-1 py-2 rounded-xl transition-all cursor-pointer border-0 ${
+                authTab === 'signin' ? 'bg-white text-slate-850 shadow-sm font-extrabold' : 'hover:text-slate-800 bg-transparent'
+              }`}
+            >
+              Sign In
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setAuthTab('signup');
+                setError(null);
+                setSuccess(null);
+              }}
+              className={`flex-1 py-2 rounded-xl transition-all cursor-pointer border-0 ${
+                authTab === 'signup' ? 'bg-white text-slate-850 shadow-sm font-extrabold' : 'hover:text-slate-800 bg-transparent'
+              }`}
+            >
+              Sign Up
+            </button>
+          </div>
+        )}
 
         {/* Subtabs for Sign In (Password / OTP) */}
         {authTab === 'signin' && (
