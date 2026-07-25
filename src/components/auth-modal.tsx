@@ -85,7 +85,7 @@ export default function AuthModal() {
       const enrichRateLimitError = (msg: string) => {
         const lower = msg.toLowerCase();
         if (lower.includes('rate limit') || lower.includes('limit exceeded') || lower.includes('too many requests')) {
-          return `${msg} Tip: Click the "Switch" button above to use "Mock Mode" for testing without database limits!`;
+          return `${msg} Tip: To fix this, turn OFF "Confirm email" under Authentication -> Providers -> Email in your Supabase Dashboard, or configure custom SMTP settings.`;
         }
         return msg;
       };
@@ -138,7 +138,7 @@ export default function AuthModal() {
       const msg = err.message || 'An unexpected error occurred.';
       const lower = msg.toLowerCase();
       if (lower.includes('rate limit') || lower.includes('limit exceeded') || lower.includes('too many requests')) {
-        setError(`${msg} Tip: Click the "Switch" button above to use "Mock Mode" for testing without database limits!`);
+        setError(`${msg} Tip: To fix this, turn OFF "Confirm email" under Authentication -> Providers -> Email in your Supabase Dashboard, or configure custom SMTP settings.`);
       } else {
         setError(msg);
       }
