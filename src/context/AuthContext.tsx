@@ -19,6 +19,8 @@ interface AuthContextType {
   isAuthModalOpen: boolean;
   openAuthModal: () => void;
   closeAuthModal: () => void;
+  adminViewMode: 'admin' | 'customer';
+  toggleAdminViewMode: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -48,9 +50,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [isMockUser, setIsMockUser] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [adminViewMode, setAdminViewMode] = useState<'admin' | 'customer'>('admin');
 
   const openAuthModal = () => setIsAuthModalOpen(true);
   const closeAuthModal = () => setIsAuthModalOpen(false);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('flavor_haven_admin_view_mode');
+      if (saved === 'admin' || saved === 'customer') {
+        setAdminViewMode(saved as any);
+      }
+    }
+  }, []);
+
+  const toggleAdminViewMode = () => {
+    setAdminViewMode((prev) => {
+      const next = prev === 'admin' ? 'customer' : 'admin';
+      localStorage.setItem('flavor_haven_admin_view_mode', next);
+      return next;
+    });
+  };
 
   // Automatically read query parameters to open Auth Modal on redirection
   useEffect(() => {
@@ -80,8 +100,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
           if (!error && data) {
             setProfile(data);
-          } else {
-            // Create profile record if missing
+          } else if (error && error.code === 'PGRST116') {
+            // Create profile record ONLY if missing (PGRST116)
             const newProfile: Profile = {
               id: session.user.id,
               name: session.user.user_metadata?.full_name || 'Valued Patron',
@@ -131,8 +151,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (data) {
           setProfile(data);
         } else {
-          // If profile is not found, it might be in progress of creation, wait or set defaults
-          setProfile({
+          // If profile is not found in database, insert it first and then set it locally, avoiding customer overrides for admins.
+          const newProfile: Profile = {
             id: session.user.id,
             name: session.user.user_metadata?.full_name || 'Valued Patron',
             email: session.user.email || '',
@@ -140,7 +160,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             avatar_url: session.user.user_metadata?.avatar_url || null,
             role: 'customer',
             reward_points: 100,
-          });
+          };
+          const { error: insErr } = await supabase.from('profiles').insert([
+            {
+              id: newProfile.id,
+              name: newProfile.name,
+              email: newProfile.email,
+              role: newProfile.role,
+              reward_points: newProfile.reward_points
+            }
+          ]);
+          if (!insErr) {
+            setProfile(newProfile);
+          }
         }
       } else {
         setProfile(null);
@@ -286,7 +318,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       isMockUser,
       isAuthModalOpen,
       openAuthModal,
-      closeAuthModal
+      closeAuthModal,
+      adminViewMode,
+      toggleAdminViewMode
     }}>
       {children}
     </AuthContext.Provider>

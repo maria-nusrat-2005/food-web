@@ -302,3 +302,12 @@ INSERT INTO banners (title, image, link, active) VALUES
 
 -- Migration: Add admin_reply to reviews
 ALTER TABLE reviews ADD COLUMN IF NOT EXISTS admin_reply TEXT;
+
+-- Migration: Create support_queries table
+CREATE TABLE IF NOT EXISTS support_queries (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name TEXT NOT NULL,
+    email TEXT NOT NULL,
+    message TEXT NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT now()
+);

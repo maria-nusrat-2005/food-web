@@ -11,7 +11,7 @@ import { Order } from '@/types';
 
 export default function UserDashboardPage() {
   const router = useRouter();
-  const { profile, toggleMockRole, isMockUser, loading } = useAuth();
+  const { profile, loading, adminViewMode, toggleAdminViewMode } = useAuth();
   const { foods, favorites, toggleFavorite, getReservations } = useApp();
   const [orders, setOrders] = useState<Order[]>([]);
   const [activeTab, setActiveTab] = useState<'profile' | 'orders' | 'wishlist' | 'points' | 'reservations'>('profile');
@@ -43,7 +43,7 @@ export default function UserDashboardPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex flex-col justify-center items-center bg-[#f0fdf4]">
+      <div className="min-h-screen flex flex-col justify-center items-center bg-[#FFFDF8]">
         <RefreshCw className="h-8 w-8 text-brand-medium animate-spin" />
         <p className="text-xs font-bold text-slate-500 mt-3">Loading your dashboard...</p>
       </div>
@@ -57,7 +57,7 @@ export default function UserDashboardPage() {
   const reservations = getReservations();
 
   return (
-    <div className="min-h-screen flex flex-col pb-16 bg-[#f0fdf4]">
+    <div className="min-h-screen flex flex-col pb-16 bg-[#FFFDF8]">
       <Navbar
         searchQuery=""
         setSearchQuery={() => {}}
@@ -75,25 +75,27 @@ export default function UserDashboardPage() {
             <h1 className="text-4xl font-extrabold text-slate-800 tracking-tight">Your Dashboard</h1>
             <p className="text-slate-500 text-sm mt-1">Manage orders, redeem rewards, and review reservations.</p>
           </div>
-          {/* Quick role-switch tool for testing admin panels */}
-          <div className="flex gap-2 bg-white/70 border border-emerald-100/50 p-2 rounded-2xl shadow-sm">
-            <button
-              onClick={toggleMockRole}
-              className="px-4 py-2 bg-slate-800 hover:bg-slate-900 text-white rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer"
-            >
-              <RefreshCw className="h-3.5 w-3.5" />
-              <span>Switch to {profile.role === 'customer' ? 'Admin' : 'Customer'} Panel</span>
-            </button>
-            {profile.role === 'admin' && (
-              <Link
-                href="/admin"
-                className="px-4 py-2 bg-brand-medium hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer"
+          {/* Admin Mode Toggle */}
+          {profile.role === 'admin' && (
+            <div className="flex gap-2 bg-white/70 border border-slate-200 p-2 rounded-2xl shadow-sm">
+              <button
+                onClick={toggleAdminViewMode}
+                className="px-4 py-2 bg-slate-800 hover:bg-slate-900 text-white rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer border-0"
               >
-                <Key className="h-3.5 w-3.5" />
-                <span>Go to Admin Dashboard</span>
-              </Link>
-            )}
-          </div>
+                <RefreshCw className="h-3.5 w-3.5" />
+                <span>View Mode: {adminViewMode === 'admin' ? 'Admin' : 'Customer'}</span>
+              </button>
+              {adminViewMode === 'admin' && (
+                <Link
+                  href="/admin"
+                  className="px-4 py-2 bg-brand-medium hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer"
+                >
+                  <Key className="h-3.5 w-3.5" />
+                  <span>Admin Dashboard</span>
+                </Link>
+              )}
+            </div>
+          )}
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
