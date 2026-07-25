@@ -311,3 +311,29 @@ CREATE TABLE IF NOT EXISTS support_queries (
     message TEXT NOT NULL,
     created_at TIMESTAMPTZ DEFAULT now()
 );
+
+-- Migration: Create restaurant_settings table
+CREATE TABLE IF NOT EXISTS restaurant_settings (
+    id TEXT PRIMARY KEY,
+    phone TEXT NOT NULL,
+    email TEXT NOT NULL,
+    address TEXT NOT NULL,
+    location_details TEXT,
+    facebook_url TEXT,
+    instagram_url TEXT,
+    twitter_url TEXT,
+    updated_at TIMESTAMPTZ DEFAULT now()
+);
+
+INSERT INTO restaurant_settings (id, phone, email, address, location_details, facebook_url, instagram_url, twitter_url)
+VALUES (
+    'contact_info',
+    '+880 1712-345678',
+    'support@flavorhaven.com',
+    'Road 12/A, Dhanmondi, Dhaka',
+    'Near SMUCT Campus. Dedicated parking available.',
+    'https://facebook.com/flavorhaven',
+    'https://instagram.com/flavorhaven',
+    'https://twitter.com/flavorhaven'
+)
+ON CONFLICT (id) DO NOTHING;

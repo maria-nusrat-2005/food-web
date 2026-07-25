@@ -25,7 +25,8 @@ import {
   Star,
   Layers,
   Heart,
-  LogOut
+  LogOut,
+  Settings
 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -39,7 +40,17 @@ export default function AdminConsolePage() {
   const { profile, loading: authLoading, adminViewMode, toggleAdminViewMode, signOut } = useAuth();
   const { foods, categories, refreshFoods, refreshCategories, isSupabaseConnected } = useApp();
 
-  const [activeTab, setActiveTab] = useState<'overview' | 'foods' | 'categories' | 'orders' | 'reviews' | 'users' | 'queries'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'foods' | 'categories' | 'orders' | 'reviews' | 'users' | 'queries' | 'settings'>('overview');
+
+  // Restaurant Settings Tab States
+  const [settingsPhone, setSettingsPhone] = useState('');
+  const [settingsEmail, setSettingsEmail] = useState('');
+  const [settingsAddress, setSettingsAddress] = useState('');
+  const [settingsDetails, setSettingsDetails] = useState('');
+  const [settingsFb, setSettingsFb] = useState('');
+  const [settingsInsta, setSettingsInsta] = useState('');
+  const [settingsTw, setSettingsTw] = useState('');
+  const [isSavingSettings, setIsSavingSettings] = useState(false);
 
   // Stats Counters
   const [orders, setOrders] = useState<Order[]>([]);
@@ -193,6 +204,29 @@ export default function AdminConsolePage() {
         setLoadingReviews(false);
       };
       fetchReviews();
+    }
+  }, [activeTab, profile]);
+
+  // Load settings tab
+  useEffect(() => {
+    if (activeTab === 'settings' && profile?.role === 'admin') {
+      const fetchSettings = async () => {
+        try {
+          const { data } = await supabase.from('restaurant_settings').select('*').eq('id', 'contact_info').single();
+          if (data) {
+            setSettingsPhone(data.phone);
+            setSettingsEmail(data.email);
+            setSettingsAddress(data.address);
+            setSettingsDetails(data.location_details || '');
+            setSettingsFb(data.facebook_url || '');
+            setSettingsInsta(data.instagram_url || '');
+            setSettingsTw(data.twitter_url || '');
+          }
+        } catch (e) {
+          console.error(e);
+        }
+      };
+      fetchSettings();
     }
   }, [activeTab, profile]);
 
@@ -415,6 +449,31 @@ export default function AdminConsolePage() {
     }
   };
 
+  const handleSaveSettings = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSavingSettings(true);
+    try {
+      const { error } = await supabase.from('restaurant_settings').upsert({
+        id: 'contact_info',
+        phone: settingsPhone,
+        email: settingsEmail,
+        address: settingsAddress,
+        location_details: settingsDetails,
+        facebook_url: settingsFb,
+        instagram_url: settingsInsta,
+        twitter_url: settingsTw,
+        updated_at: new Date().toISOString()
+      });
+      if (error) throw error;
+      alert('Restaurant contact info updated successfully!');
+    } catch (err) {
+      console.error(err);
+      alert('Failed to update restaurant settings.');
+    } finally {
+      setIsSavingSettings(false);
+    }
+  };
+
   return (
     <div className="min-h-screen flex flex-col pb-16 bg-[#FFFDF8]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 flex-1 w-full">
@@ -542,6 +601,18 @@ export default function AdminConsolePage() {
                   {queriesCount}
                 </span>
               )}
+            </button>
+
+            <button
+              onClick={() => setActiveTab('settings')}
+              className={`w-full p-4 rounded-2xl text-left text-sm font-bold flex items-center gap-3 transition-all cursor-pointer border-0 ${
+                activeTab === 'settings'
+                  ? 'bg-brand-medium text-white shadow-md shadow-brand-medium/20 scale-[1.02]'
+                  : 'bg-white/60 text-slate-700 hover:bg-white border border-emerald-100/25'
+              }`}
+            >
+              <Settings className="h-5 w-5" />
+              <span>Outlet Settings</span>
             </button>
           </div>
 
@@ -929,6 +1000,113 @@ export default function AdminConsolePage() {
                       </table>
                     </div>
                   )}
+                </div>
+              </div>
+            )}
+
+            {/* Settings Tab */}
+            {activeTab === 'settings' && (
+              <div className="space-y-6 max-w-2xl">
+                <div>
+                  <h3 className="text-xl font-bold text-slate-800">Restaurant Settings & Contact Info</h3>
+                  <p className="text-xs text-slate-500 mt-1">Configure public contact phone, email, address locations, and social media media profiles.</p>
+                </div>
+
+                <div className="glass-panel rounded-3xl p-6 border border-emerald-100/50 bg-white/40 shadow-sm">
+                  <form onSubmit={handleSaveSettings} className="space-y-4 text-xs font-bold text-slate-650">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="space-y-1">
+                        <label className="uppercase tracking-wider">Contact Phone Number</label>
+                        <input
+                          type="text"
+                          required
+                          value={settingsPhone}
+                          onChange={(e) => setSettingsPhone(e.target.value)}
+                          className="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold focus:outline-none focus:border-brand-medium"
+                          placeholder="e.g. +880 1712-345678"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="uppercase tracking-wider">Support Email Address</label>
+                        <input
+                          type="email"
+                          required
+                          value={settingsEmail}
+                          onChange={(e) => setSettingsEmail(e.target.value)}
+                          className="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold focus:outline-none focus:border-brand-medium"
+                          placeholder="support@flavorhaven.com"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="uppercase tracking-wider">Main Outlet Address</label>
+                      <input
+                        type="text"
+                        required
+                        value={settingsAddress}
+                        onChange={(e) => setSettingsAddress(e.target.value)}
+                        className="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold focus:outline-none focus:border-brand-medium"
+                        placeholder="Road 12/A, Dhanmondi, Dhaka"
+                      />
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="uppercase tracking-wider">Location / Landmark Description</label>
+                      <textarea
+                        rows={2}
+                        value={settingsDetails}
+                        onChange={(e) => setSettingsDetails(e.target.value)}
+                        className="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold focus:outline-none focus:border-brand-medium resize-none"
+                        placeholder="Near SMUCT Campus. Dedicated parking available."
+                      />
+                    </div>
+
+                    <div className="border-t border-slate-100 pt-4 space-y-4">
+                      <h4 className="text-sm font-bold text-slate-800">Social Media Connections</h4>
+                      
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <div className="space-y-1">
+                          <label className="uppercase tracking-wider text-[9px]">Facebook Link</label>
+                          <input
+                            type="text"
+                            value={settingsFb}
+                            onChange={(e) => setSettingsFb(e.target.value)}
+                            className="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold"
+                            placeholder="https://facebook.com/..."
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <label className="uppercase tracking-wider text-[9px]">Instagram Link</label>
+                          <input
+                            type="text"
+                            value={settingsInsta}
+                            onChange={(e) => setSettingsInsta(e.target.value)}
+                            className="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold"
+                            placeholder="https://instagram.com/..."
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <label className="uppercase tracking-wider text-[9px]">Twitter Link</label>
+                          <input
+                            type="text"
+                            value={settingsTw}
+                            onChange={(e) => setSettingsTw(e.target.value)}
+                            className="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold"
+                            placeholder="https://twitter.com/..."
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    <button
+                      type="submit"
+                      disabled={isSavingSettings}
+                      className="w-full bg-brand-medium hover:bg-emerald-700 text-white font-extrabold py-3 rounded-xl text-xs transition-colors cursor-pointer border-0 mt-4"
+                    >
+                      {isSavingSettings ? 'Saving Settings...' : 'Update Settings & Contact Info'}
+                    </button>
+                  </form>
                 </div>
               </div>
             )}

@@ -4,8 +4,9 @@ import React, { useState } from 'react';
 import Navbar from '@/components/navbar';
 import CartDrawer from '@/components/cart-drawer';
 import { useCart } from '@/context/CartContext';
-import { Phone, Mail, MapPin, Send, HelpCircle, ArrowDown } from 'lucide-react';
+import { Phone, Mail, MapPin, Send, HelpCircle, ArrowDown, Heart } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
+import { useEffect } from 'react';
 
 const FAQS = [
   { q: 'What areas do you deliver to?', a: 'Currently, we offer 20-minute deliveries within Dhanmondi, Lalmatia, Gulshan, Banani, and Uttara in Dhaka. We are planning to expand to more zones soon!' },
@@ -24,6 +25,40 @@ export default function ContactPage() {
   const [email, setEmail] = useState('');
   const [msg, setMsg] = useState('');
   const [submitted, setSubmitted] = useState(false);
+
+  // Dynamic Contact Info states (with default placeholders)
+  const [phone, setPhone] = useState('+880 1712-345678');
+  const [emailInfo, setEmailInfo] = useState('support@flavorhaven.com');
+  const [address, setAddress] = useState('Road 12/A, Dhanmondi, Dhaka');
+  const [locationDetails, setLocationDetails] = useState('Near SMUCT Campus. Dedicated parking available.');
+  const [facebookUrl, setFacebookUrl] = useState('https://facebook.com/flavorhaven');
+  const [instagramUrl, setInstagramUrl] = useState('https://instagram.com/flavorhaven');
+  const [twitterUrl, setTwitterUrl] = useState('https://twitter.com/flavorhaven');
+
+  useEffect(() => {
+    async function loadContactInfo() {
+      try {
+        const { data, error } = await supabase
+          .from('restaurant_settings')
+          .select('*')
+          .eq('id', 'contact_info')
+          .single();
+
+        if (!error && data) {
+          setPhone(data.phone);
+          setEmailInfo(data.email);
+          setAddress(data.address);
+          if (data.location_details) setLocationDetails(data.location_details);
+          if (data.facebook_url) setFacebookUrl(data.facebook_url);
+          if (data.instagram_url) setInstagramUrl(data.instagram_url);
+          if (data.twitter_url) setTwitterUrl(data.twitter_url);
+        }
+      } catch (err) {
+        console.warn('Failed to load contact info, utilizing placeholders.', err);
+      }
+    }
+    loadContactInfo();
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -79,7 +114,7 @@ export default function ContactPage() {
                 <Phone className="h-4.5 w-4.5 text-brand-medium" />
                 <span>Call Us</span>
               </h3>
-              <p className="text-sm font-extrabold text-slate-800">+880 1712-345678</p>
+              <p className="text-sm font-extrabold text-slate-800">{phone}</p>
               <p className="text-xs text-slate-500 mt-1">Hotline available daily: 10:00 AM - 11:30 PM</p>
             </div>
 
@@ -88,7 +123,7 @@ export default function ContactPage() {
                 <Mail className="h-4.5 w-4.5 text-brand-medium" />
                 <span>Write to Us</span>
               </h3>
-              <p className="text-sm font-extrabold text-slate-800">support@flavorhaven.com</p>
+              <p className="text-sm font-extrabold text-slate-800">{emailInfo}</p>
               <p className="text-xs text-slate-500 mt-1">Expected reply timeframe: within 2 hours</p>
             </div>
 
@@ -97,9 +132,36 @@ export default function ContactPage() {
                 <MapPin className="h-4.5 w-4.5 text-brand-medium" />
                 <span>Main Branch</span>
               </h3>
-              <p className="text-sm font-extrabold text-slate-800">Road 12/A, Dhanmondi, Dhaka</p>
-              <p className="text-xs text-slate-500 mt-1">Near SMUCT Campus. Dedicated parking available.</p>
+              <p className="text-sm font-extrabold text-slate-800">{address}</p>
+              <p className="text-xs text-slate-500 mt-1">{locationDetails}</p>
             </div>
+
+            {/* Social Media Links Connect Card */}
+            {(facebookUrl || instagramUrl || twitterUrl) && (
+              <div className="glass-panel rounded-3xl p-6 border border-emerald-100/50 bg-white/40 shadow-sm">
+                <h3 className="text-base font-bold text-slate-800 mb-4 pb-2 border-b border-slate-100 flex items-center gap-2">
+                  <Heart className="h-4.5 w-4.5 text-rose-500" />
+                  <span>Connect With Us</span>
+                </h3>
+                <div className="flex gap-4">
+                  {facebookUrl && (
+                    <a href={facebookUrl} target="_blank" rel="noopener noreferrer" className="text-xs font-bold text-slate-650 hover:text-brand-medium transition-colors">
+                      Facebook
+                    </a>
+                  )}
+                  {instagramUrl && (
+                    <a href={instagramUrl} target="_blank" rel="noopener noreferrer" className="text-xs font-bold text-slate-650 hover:text-brand-medium transition-colors">
+                      Instagram
+                    </a>
+                  )}
+                  {twitterUrl && (
+                    <a href={twitterUrl} target="_blank" rel="noopener noreferrer" className="text-xs font-bold text-slate-650 hover:text-brand-medium transition-colors">
+                      Twitter
+                    </a>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Column 2: Inquire Form */}
