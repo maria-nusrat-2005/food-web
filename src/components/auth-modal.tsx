@@ -76,6 +76,14 @@ export default function AuthModal() {
     }
 
     try {
+      const enrichRateLimitError = (msg: string) => {
+        const lower = msg.toLowerCase();
+        if (lower.includes('rate limit') || lower.includes('limit exceeded') || lower.includes('too many requests')) {
+          return `${msg} Tip: Click the "Switch" button above to use "Mock Mode" for testing without database limits!`;
+        }
+        return msg;
+      };
+
       if (authTab === 'signin') {
         if (activeTab === 'password') {
           const res = await signInWithPassword(email, password);
@@ -86,7 +94,7 @@ export default function AuthModal() {
               performRedirect();
             }, 1200);
           } else {
-            setError(res.error || 'Failed to sign in. Check details.');
+            setError(enrichRateLimitError(res.error || 'Failed to sign in. Check details.'));
           }
         } else {
           const res = await signInWithOtp(email);
@@ -99,7 +107,7 @@ export default function AuthModal() {
               }, 1200);
             }
           } else {
-            setError(res.error || 'Failed to send OTP.');
+            setError(enrichRateLimitError(res.error || 'Failed to send OTP.'));
           }
         }
       } else {
@@ -117,11 +125,17 @@ export default function AuthModal() {
             performRedirect();
           }, 1200);
         } else {
-          setError(res.error || 'Registration failed.');
+          setError(enrichRateLimitError(res.error || 'Registration failed.'));
         }
       }
     } catch (err: any) {
-      setError(err.message || 'An unexpected error occurred.');
+      const msg = err.message || 'An unexpected error occurred.';
+      const lower = msg.toLowerCase();
+      if (lower.includes('rate limit') || lower.includes('limit exceeded') || lower.includes('too many requests')) {
+        setError(`${msg} Tip: Click the "Switch" button above to use "Mock Mode" for testing without database limits!`);
+      } else {
+        setError(msg);
+      }
     } finally {
       setLoading(false);
     }
