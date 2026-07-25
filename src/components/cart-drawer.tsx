@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { X, Plus, Minus, Trash2, ShoppingBag, CreditCard, Sparkles } from 'lucide-react';
 import { CartItem } from '@/types';
 import { useAuth } from '@/context/AuthContext';
+import { useRouter } from 'next/navigation';
 import confetti from 'canvas-confetti';
 
 interface CartDrawerProps {
@@ -23,9 +24,8 @@ export default function CartDrawer({
   onRemoveItem,
   onClearCart,
 }: CartDrawerProps) {
-  const [checkingOut, setCheckingOut] = useState(false);
-  const [successModal, setSuccessModal] = useState(false);
   const { profile, openAuthModal } = useAuth();
+  const router = useRouter();
 
   if (!isOpen) return null;
 
@@ -44,18 +44,8 @@ export default function CartDrawer({
       return;
     }
 
-    setCheckingOut(true);
-    setTimeout(() => {
-      setCheckingOut(false);
-      setSuccessModal(true);
-      confetti({
-        particleCount: 150,
-        spread: 80,
-        origin: { y: 0.6 },
-        colors: ['#059669', '#10b981', '#3b82f6', '#db2777'],
-      });
-      onClearCart();
-    }, 2000);
+    onClose();
+    router.push('/checkout');
   };
 
   return (
@@ -168,54 +158,16 @@ export default function CartDrawer({
 
                 <button
                   onClick={handleCheckout}
-                  disabled={checkingOut}
-                  className="w-full mt-6 bg-brand-medium hover:bg-emerald-700 text-white font-extrabold text-sm py-4 rounded-xl shadow-lg shadow-brand-medium/10 flex items-center justify-center gap-2 transition-all active:scale-[0.98] disabled:opacity-50 disabled:scale-100 cursor-pointer"
+                  className="w-full mt-6 bg-brand-medium hover:bg-emerald-700 text-white font-extrabold text-sm py-4 rounded-xl shadow-lg shadow-brand-medium/10 flex items-center justify-center gap-2 transition-all active:scale-[0.98] cursor-pointer border-0"
                 >
-                  {checkingOut ? (
-                    <>
-                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                      <span>Processing Order...</span>
-                    </>
-                  ) : (
-                    <>
-                      <CreditCard className="h-4.5 w-4.5" />
-                      <span>Place Order ({total} Tk)</span>
-                    </>
-                  )}
+                  <CreditCard className="h-4.5 w-4.5" />
+                  <span>Proceed to Checkout ({total} Tk)</span>
                 </button>
               </div>
             )}
           </div>
         </div>
       </div>
-
-      {/* Checkout Success Modal */}
-      {successModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-          <div
-            onClick={() => setSuccessModal(false)}
-            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-          />
-          <div className="relative glass-panel bg-white border border-emerald-100/50 rounded-3xl p-8 max-w-sm w-full text-center shadow-2xl animate-in zoom-in-95 duration-200">
-            <div className="mx-auto w-16 h-16 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mb-5">
-              <Sparkles className="h-8 w-8 text-emerald-600 animate-pulse" />
-            </div>
-            <h3 className="text-2xl font-extrabold text-slate-850 mb-2">Order Confirmed!</h3>
-            <p className="text-sm text-slate-650 leading-relaxed mb-6">
-              Thank you for ordering from Flavor Haven! We are preparing your meal. It will arrive shortly.
-            </p>
-            <button
-              onClick={() => {
-                setSuccessModal(false);
-                onClose();
-              }}
-              className="w-full py-3 bg-brand-medium hover:bg-emerald-750 text-white font-bold rounded-xl transition-all cursor-pointer"
-            >
-              Great, thanks!
-            </button>
-          </div>
-        </div>
-      )}
     </>
   );
 }

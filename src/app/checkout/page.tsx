@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useCart } from '@/context/CartContext';
 import { useAuth } from '@/context/AuthContext';
 import Navbar from '@/components/navbar';
-import { CreditCard, ShoppingBag, Truck, MapPin, Phone, User, AlertCircle, ShieldCheck } from 'lucide-react';
+import { CreditCard, ShoppingBag, Truck, MapPin, Phone, User, AlertCircle, ShieldCheck, RefreshCw } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
@@ -32,6 +32,8 @@ export default function CheckoutPage() {
   
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
+  const [paymentStatusText, setPaymentStatusText] = useState('');
 
   useEffect(() => {
     if (profile) {
@@ -52,18 +54,42 @@ export default function CheckoutPage() {
 
     try {
       const fullAddress = `${address}, ${city}`;
+
+      if (paymentMethod !== 'cod') {
+        setIsProcessingPayment(true);
+        const methodNames = {
+          stripe: 'Stripe Secure Gateway',
+          sslcommerz: 'SSLCommerz Gateway',
+          bkash: 'bKash Wallet',
+          nagad: 'Nagad Wallet'
+        };
+        const nameText = methodNames[paymentMethod] || 'Digital Payment Wallet';
+        setPaymentStatusText(`Connecting to ${nameText}...`);
+
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+        setPaymentStatusText(`Authorizing payment transaction...`);
+
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+        setPaymentStatusText(`Payment Authorized! Completing order placement...`);
+        
+        await new Promise((resolve) => setTimeout(resolve, 500));
+      }
+
       const result = await placeOrder(fullAddress, phone, paymentMethod, notes);
 
       if (result.success && result.orderId) {
+        setIsProcessingPayment(false);
         // Redirect to tracking page
         router.push(`/orders/${result.orderId}`);
       } else {
         setErrorMsg('Failed to process checkout. Please try again.');
         setIsSubmitting(false);
+        setIsProcessingPayment(false);
       }
     } catch (e) {
       setErrorMsg('An unexpected error occurred during order submission.');
       setIsSubmitting(false);
+      setIsProcessingPayment(false);
     }
   };
 
@@ -359,6 +385,25 @@ export default function CheckoutPage() {
           </div>
         </form>
       </div>
+
+      {/* Payment Processing Modal Overlay */}
+      {isProcessingPayment && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" />
+          <div className="relative glass-panel bg-white border border-emerald-100/50 rounded-[32px] p-8 max-w-sm w-full text-center shadow-2xl animate-in zoom-in-95 duration-200">
+            <div className="mx-auto w-16 h-16 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mb-6">
+              <RefreshCw className="h-8 w-8 text-brand-medium animate-spin" />
+            </div>
+            <h3 className="text-xl font-extrabold text-slate-800 mb-2">Processing Payment</h3>
+            <p className="text-sm text-slate-500 font-semibold leading-relaxed animate-pulse">
+              {paymentStatusText}
+            </p>
+            <p className="text-[10px] text-slate-400 mt-4 leading-relaxed">
+              Please do not close this browser tab or press the back button.
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -181,12 +181,18 @@ CREATE POLICY "Allow user insert own profile" ON profiles FOR INSERT WITH CHECK 
 CREATE POLICY "Allow public read coupons" ON coupons FOR SELECT USING (true);
 
 -- Orders policies
-CREATE POLICY "Allow user read own orders" ON orders FOR SELECT USING (true);
-CREATE POLICY "Allow user insert own orders" ON orders FOR INSERT WITH CHECK (true);
-CREATE POLICY "Allow admin edit orders" ON orders FOR ALL USING (true);
+CREATE POLICY "Allow user read own orders" ON orders FOR SELECT USING (auth.uid() = user_id OR (SELECT role FROM profiles WHERE id = auth.uid()) = 'admin');
+CREATE POLICY "Allow user insert own orders" ON orders FOR INSERT WITH CHECK (auth.uid() = user_id OR user_id IS NULL);
+CREATE POLICY "Allow admin edit orders" ON orders FOR ALL USING ((SELECT role FROM profiles WHERE id = auth.uid()) = 'admin');
 
 -- Order Items policies
-CREATE POLICY "Allow public read order items" ON order_items FOR SELECT USING (true);
+CREATE POLICY "Allow user read own order items" ON order_items FOR SELECT USING (
+    EXISTS (
+        SELECT 1 FROM orders 
+        WHERE orders.id = order_items.order_id 
+        AND (orders.user_id = auth.uid() OR (SELECT role FROM profiles WHERE id = auth.uid()) = 'admin')
+    )
+);
 CREATE POLICY "Allow public insert order items" ON order_items FOR INSERT WITH CHECK (true);
 
 -- Favorites policies
