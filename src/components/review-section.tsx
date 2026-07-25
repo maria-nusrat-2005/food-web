@@ -1,8 +1,9 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Star, MessageSquare, User, Send, Heart, AlertCircle } from 'lucide-react';
 import { Review } from '@/types';
+import { useAuth } from '@/context/AuthContext';
 
 interface ReviewSectionProps {
   reviews: Review[];
@@ -10,12 +11,19 @@ interface ReviewSectionProps {
 }
 
 export default function ReviewSection({ reviews, onSubmitReview }: ReviewSectionProps) {
+  const { profile } = useAuth();
   const [name, setName] = useState('');
   const [rating, setRating] = useState(5);
   const [hoverRating, setHoverRating] = useState<number | null>(null);
   const [comment, setComment] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [msgStatus, setMsgStatus] = useState<{ type: 'success' | 'error' | 'warning'; text: string } | null>(null);
+
+  useEffect(() => {
+    if (profile?.name && !name) {
+      setName(profile.name);
+    }
+  }, [profile]);
 
   // Simple like states for reviews
   const [likedReviews, setLikedReviews] = useState<Record<string, boolean>>({});

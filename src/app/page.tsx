@@ -19,6 +19,64 @@ export default function Home() {
   
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [activeBannerIdx, setActiveBannerIdx] = useState(0);
+  const [reviews, setReviews] = useState<any[]>([]);
+
+  // Load reviews on mount
+  useEffect(() => {
+    async function loadReviews() {
+      try {
+        if (!isMockUser) {
+          const { data, error } = await supabase
+            .from('reviews')
+            .select('*')
+            .is('food_id', null)
+            .order('created_at', { ascending: false });
+          if (!error && data && data.length > 0) {
+            setReviews(data);
+            return;
+          }
+        }
+      } catch (err) {
+        console.warn('Failed to load reviews from Supabase. Falling back to local storage.', err);
+      }
+
+      // Local storage fallback / initial seeding
+      let localReviews = JSON.parse(localStorage.getItem('flavor_haven_reviews') || '[]');
+      if (localReviews.length === 0) {
+        localReviews = [
+          {
+            id: 'init-rev-1',
+            client_name: 'Anvi Rahman',
+            avatar_url: null,
+            rating: 5,
+            comment: 'The Kacchi Biryani here is absolutely authentic! Saffron notes, tender meat, and perfect grains of rice. Definitely coming back for more.',
+            created_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString()
+          },
+          {
+            id: 'init-rev-2',
+            client_name: 'Nafis Imtiaz',
+            avatar_url: null,
+            rating: 5,
+            comment: 'Amazing customer service and cozy environment. The premium coffee is rich and smells heavenly. A great place to work or hang out with friends.',
+            created_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString()
+          },
+          {
+            id: 'init-rev-3',
+            client_name: 'Sajid Hasan',
+            avatar_url: null,
+            rating: 4,
+            comment: 'Had their Beef Naga Burger. It\'s incredibly spicy but so delicious. The bun was soft and the patty was juicy. Highly recommended for spice lovers!',
+            created_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString()
+          }
+        ];
+        localStorage.setItem('flavor_haven_reviews', JSON.stringify(localReviews));
+      }
+      
+      const generalReviews = localReviews.filter((r: any) => !r.food_id);
+      setReviews(generalReviews);
+    }
+    loadReviews();
+  }, [isMockUser]);
 
   // Rotating Banners Data
   const banners = [
@@ -45,25 +103,59 @@ export default function Home() {
 
   // Submit general review
   const handleReviewSubmission = async (name: string, rating: number, comment: string) => {
+    const tempId = `rev-${Date.now()}`;
+    const newReview = {
+      id: tempId,
+      food_id: null,
+      user_id: profile?.id || null,
+      client_name: name,
+      avatar_url: profile?.avatar_url || null,
+      rating,
+      comment,
+      created_at: new Date().toISOString(),
+    };
+
+    let success = false;
+    let isLocalOnly = true;
+
     try {
-      if (!isMockUser && profile) {
+      if (!isMockUser) {
         const { error } = await supabase.from('reviews').insert([
           {
             food_id: null,
-            user_id: profile.id,
+            user_id: profile?.id || null,
             client_name: name,
-            avatar_url: profile.avatar_url,
+            avatar_url: profile?.avatar_url || null,
             rating,
             comment,
           },
         ]);
-        if (error) throw error;
-        return { success: true, isLocalOnly: false };
+        if (!error) {
+          success = true;
+          isLocalOnly = false;
+        } else {
+          console.error('Supabase review insert error:', error);
+        }
       }
     } catch (err) {
       console.error('Failed to submit review to Supabase:', err);
     }
-    return { success: true, isLocalOnly: true };
+
+    // Save to local storage for offline / fallback
+    const localHistory = JSON.parse(localStorage.getItem('flavor_haven_reviews') || '[]');
+    localStorage.setItem('flavor_haven_reviews', JSON.stringify([newReview, ...localHistory]));
+
+    if (isMockUser) {
+      success = true;
+      isLocalOnly = true;
+    }
+
+    if (success || isLocalOnly) {
+      setReviews((prev) => [newReview, ...prev]);
+      return { success: true, isLocalOnly };
+    }
+
+    return { success: false, isLocalOnly: true };
   };
 
   // Featured foods (Chef's Choice items)
@@ -214,7 +306,7 @@ export default function Home() {
       </section>
 
       {/* General Testimonial sections */}
-      <ReviewSection reviews={[]} onSubmitReview={handleReviewSubmission} />
+      <ReviewSection reviews={reviews} onSubmitReview={handleReviewSubmission} />
 
       {/* Cart Drawer */}
       <CartDrawer

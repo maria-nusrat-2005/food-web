@@ -24,6 +24,35 @@ export default function ProductDetailPage() {
 
   const [food, setFood] = useState<Food | null>(null);
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const [reviews, setReviews] = useState<any[]>([]);
+
+  // Load reviews on mount
+  useEffect(() => {
+    async function loadReviews() {
+      if (!params.id) return;
+      try {
+        if (!isMockUser) {
+          const { data, error } = await supabase
+            .from('reviews')
+            .select('*')
+            .eq('food_id', params.id)
+            .order('created_at', { ascending: false });
+          if (!error && data) {
+            setReviews(data);
+            return;
+          }
+        }
+      } catch (err) {
+        console.warn('Failed to load reviews from Supabase. Falling back to local storage.', err);
+      }
+
+      // Local storage fallback
+      const localReviews = JSON.parse(localStorage.getItem('flavor_haven_reviews') || '[]');
+      const itemReviews = localReviews.filter((r: any) => r.food_id === params.id);
+      setReviews(itemReviews);
+    }
+    loadReviews();
+  }, [params.id, isMockUser]);
 
   useEffect(() => {
     if (params.id) {
@@ -58,25 +87,60 @@ export default function ProductDetailPage() {
 
   // Submit review for this dish
   const handleReviewSubmission = async (name: string, rating: number, comment: string) => {
+    if (!food) return { success: false, isLocalOnly: true };
+    const tempId = `rev-${Date.now()}`;
+    const newReview = {
+      id: tempId,
+      food_id: food.id,
+      user_id: profile?.id || null,
+      client_name: name,
+      avatar_url: profile?.avatar_url || null,
+      rating,
+      comment,
+      created_at: new Date().toISOString(),
+    };
+
+    let success = false;
+    let isLocalOnly = true;
+
     try {
-      if (!isMockUser && profile && food) {
+      if (!isMockUser) {
         const { error } = await supabase.from('reviews').insert([
           {
             food_id: food.id,
-            user_id: profile.id,
+            user_id: profile?.id || null,
             client_name: name,
-            avatar_url: profile.avatar_url,
+            avatar_url: profile?.avatar_url || null,
             rating,
             comment,
           },
         ]);
-        if (error) throw error;
-        return { success: true, isLocalOnly: false };
+        if (!error) {
+          success = true;
+          isLocalOnly = false;
+        } else {
+          console.error('Supabase review insert error:', error);
+        }
       }
     } catch (err) {
       console.error('Failed to submit review to Supabase:', err);
     }
-    return { success: true, isLocalOnly: true };
+
+    // Save to local storage for offline / fallback
+    const localHistory = JSON.parse(localStorage.getItem('flavor_haven_reviews') || '[]');
+    localStorage.setItem('flavor_haven_reviews', JSON.stringify([newReview, ...localHistory]));
+
+    if (isMockUser) {
+      success = true;
+      isLocalOnly = true;
+    }
+
+    if (success || isLocalOnly) {
+      setReviews((prev) => [newReview, ...prev]);
+      return { success: true, isLocalOnly };
+    }
+
+    return { success: false, isLocalOnly: true };
   };
 
   return (
@@ -290,7 +354,7 @@ export default function ProductDetailPage() {
 
         {/* Review Form */}
         <ReviewSection
-          reviews={[]}
+          reviews={reviews}
           onSubmitReview={handleReviewSubmission}
         />
       </div>
