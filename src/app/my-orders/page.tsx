@@ -281,8 +281,8 @@ export default function MyOrdersPage() {
                                     className="w-10 h-10 rounded-lg object-cover border border-slate-100"
                                   />
                                 ) : (
-                                  <div className="w-10 h-10 bg-slate-100 rounded-lg flex items-center justify-center">
-                                    <ShoppingBag className="h-5 w-5 text-slate-455" />
+                                  <div className="w-10 h-10 bg-emerald-50 rounded-lg flex items-center justify-center border border-emerald-100 text-brand-medium font-bold text-xs select-none">
+                                    🥘
                                   </div>
                                 )}
                                 <div>

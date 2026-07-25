@@ -168,11 +168,29 @@ export default function ProductDetailPage() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 mb-16">
           {/* Left Column - Large Image */}
           <div className="relative aspect-video lg:aspect-auto lg:h-[480px] rounded-3xl overflow-hidden glass-panel border border-emerald-100/50 shadow-lg">
-            <img
-              src={food.image || '/Image/amirali-mirhashemian-sc5sTPMrVfk-unsplash.jpg'}
-              alt={food.title}
-              className="w-full h-full object-cover"
-            />
+            {food.image ? (
+              <img
+                src={food.image}
+                alt={food.title}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <div className="w-full h-full min-h-[300px] bg-gradient-to-tr from-brand-medium/20 to-emerald-500/10 flex flex-col items-center justify-center relative select-none">
+                <span className="text-xs font-black tracking-widest text-brand-medium/40 uppercase mb-4">Flavor Haven</span>
+                <div className="h-16 w-16 bg-emerald-50 rounded-full flex items-center justify-center border border-emerald-100/30 shadow-md text-brand-medium mb-2 text-3xl">
+                  {food.category_id === 'c1000000-0000-0000-0000-000000000007' || food.category_id === '7' ? (
+                    '☕'
+                  ) : food.category_id === 'c1000000-0000-0000-0000-000000000006' || food.category_id === '6' ? (
+                    '🍰'
+                  ) : (
+                    '🥘'
+                  )}
+                </div>
+                <div className="text-6xl font-black text-slate-800/10 tracking-widest uppercase font-mono mt-2">
+                  {food.title ? food.title.substring(0, 2) : 'FH'}
+                </div>
+              </div>
+            )}
             {food.discount_price !== null && (
               <span className="absolute top-4 left-4 px-3.5 py-1.5 bg-brand-pink text-xs font-extrabold text-white rounded-xl uppercase tracking-wider shadow-md">
                 {Math.round(((food.price - food.discount_price) / food.price) * 100)}% Off

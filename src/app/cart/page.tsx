@@ -116,11 +116,23 @@ export default function CartPage() {
                     className="glass-panel rounded-2xl p-4 border border-emerald-100/50 bg-white/40 flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-all hover:border-emerald-100"
                   >
                     <div className="flex items-center gap-4">
-                      <img
-                        src={item.food.image || '/Image/amirali-mirhashemian-sc5sTPMrVfk-unsplash.jpg'}
-                        alt={item.food.title}
-                        className="w-20 h-20 rounded-xl object-cover bg-slate-100 flex-shrink-0 border border-slate-200"
-                      />
+                      {item.food.image ? (
+                        <img
+                          src={item.food.image}
+                          alt={item.food.title}
+                          className="w-20 h-20 rounded-xl object-cover bg-slate-100 flex-shrink-0 border border-slate-200"
+                        />
+                      ) : (
+                        <div className="w-20 h-20 rounded-xl bg-emerald-50 text-brand-medium flex items-center justify-center flex-shrink-0 border border-emerald-100/30 font-bold select-none text-2xl">
+                          {item.food.category_id === 'c1000000-0000-0000-0000-000000000007' || item.food.category_id === '7' ? (
+                            '☕'
+                          ) : item.food.category_id === 'c1000000-0000-0000-0000-000000000006' || item.food.category_id === '6' ? (
+                            '🍰'
+                          ) : (
+                            '🥘'
+                          )}
+                        </div>
+                      )}
                       <div>
                         <h3 className="text-base font-extrabold text-slate-800">{item.food.title}</h3>
                         <p className="text-xs text-brand-medium font-bold mt-0.5">{itemPrice} Tk</p>

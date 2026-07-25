@@ -119,7 +119,7 @@ export default function MyReservationsPage() {
               You haven't requested any table bookings yet. Host a dinner or secure your spot today.
             </p>
             <Link
-              href="/about"
+              href="/book"
               className="inline-flex items-center justify-center px-6 py-3 bg-[#166534] hover:bg-[#114f29] text-white text-xs font-bold rounded-xl transition-all cursor-pointer shadow-sm"
             >
               Book a Table

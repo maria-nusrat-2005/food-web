@@ -21,19 +21,37 @@ export default function MenuCard({ item, onAddToCart }: MenuCardProps) {
 
   return (
     <div className="glass-panel glass-panel-hover rounded-2xl overflow-hidden flex flex-col h-full relative group">
-      {/* Product Image */}
-      <div className="relative aspect-video w-full overflow-hidden bg-emerald-950/5">
-        <img
-          src={item.image_url || '/Image/amirali-mirhashemian-sc5sTPMrVfk-unsplash.jpg'}
-          alt={item.name}
-          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-          loading="lazy"
-        />
-        <div className="absolute top-3 right-3 px-2.5 py-1 rounded-full bg-white/90 backdrop-blur-md border border-emerald-100/50 flex items-center gap-1">
+      {/* Product Image / Dynamic Placeholder */}
+      <div className="relative aspect-video w-full overflow-hidden bg-emerald-950/5 flex items-stretch">
+        {item.image_url ? (
+          <img
+            src={item.image_url}
+            alt={item.name}
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+            loading="lazy"
+          />
+        ) : (
+          <div className="w-full h-full bg-gradient-to-tr from-brand-medium/25 to-emerald-500/10 flex flex-col items-center justify-center relative select-none flex-1">
+            <span className="text-[9px] font-black tracking-widest text-brand-medium/35 uppercase mb-1.5">Flavor Haven</span>
+            <div className="h-9 w-9 bg-emerald-50 rounded-full flex items-center justify-center border border-emerald-100/30 shadow-sm text-brand-medium mb-0.5">
+              {item.category?.toLowerCase() === 'drinks' || item.category?.toLowerCase() === 'coffee' ? (
+                <span className="text-lg">☕</span>
+              ) : item.category?.toLowerCase() === 'dessert' ? (
+                <span className="text-lg">🍰</span>
+              ) : (
+                <span className="text-lg">🥘</span>
+              )}
+            </div>
+            <div className="text-2xl font-black text-slate-800/10 tracking-widest uppercase font-mono">
+              {item.name ? item.name.substring(0, 2) : 'FH'}
+            </div>
+          </div>
+        )}
+        <div className="absolute top-3 right-3 px-2.5 py-1 rounded-full bg-white/90 backdrop-blur-md border border-emerald-100/50 flex items-center gap-1 z-10">
           <Star className="h-3.5 w-3.5 fill-brand-medium text-brand-medium" />
           <span className="text-xs font-bold text-slate-800">{item.rating}</span>
         </div>
-        <span className="absolute bottom-3 left-3 px-3 py-1 rounded-lg bg-brand-pink text-xs font-bold text-white uppercase tracking-wider shadow-md">
+        <span className="absolute bottom-3 left-3 px-3 py-1 rounded-lg bg-brand-pink text-xs font-bold text-white uppercase tracking-wider shadow-md z-10">
           {item.category}
         </span>
       </div>

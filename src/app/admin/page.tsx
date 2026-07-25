@@ -26,7 +26,9 @@ import {
   Layers,
   Heart,
   LogOut,
-  Settings
+  Settings,
+  CheckCircle2,
+  XCircle
 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -37,10 +39,10 @@ const ORDER_STATUS_OPTIONS = ['received', 'preparing', 'cooking', 'delivery', 'd
 
 export default function AdminConsolePage() {
   const router = useRouter();
-  const { profile, loading: authLoading, adminViewMode, toggleAdminViewMode, signOut } = useAuth();
+  const { profile, loading: authLoading, signOut } = useAuth();
   const { foods, categories, refreshFoods, refreshCategories, isSupabaseConnected } = useApp();
 
-  const [activeTab, setActiveTab] = useState<'overview' | 'foods' | 'categories' | 'orders' | 'reviews' | 'users' | 'queries' | 'settings'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'foods' | 'categories' | 'orders' | 'reservations' | 'reviews' | 'users' | 'queries' | 'settings'>('overview');
 
   // Restaurant Settings Tab States
   const [settingsPhone, setSettingsPhone] = useState('');
@@ -89,6 +91,8 @@ export default function AdminConsolePage() {
   const [isGlutenFree, setIsGlutenFree] = useState(false);
   const [spicyLevel, setSpicyLevel] = useState('0');
   const [isSubmittingFood, setIsSubmittingFood] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadError, setUploadError] = useState('');
 
   // Category Tab State
   const [categoryModalOpen, setCategoryModalOpen] = useState(false);
@@ -117,7 +121,7 @@ export default function AdminConsolePage() {
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
       const tab = params.get('tab');
-      if (['overview', 'foods', 'categories', 'orders', 'reviews', 'users', 'queries'].includes(tab || '')) {
+      if (['overview', 'foods', 'categories', 'orders', 'reservations', 'reviews', 'users', 'queries'].includes(tab || '')) {
         setActiveTab(tab as any);
       }
     }
@@ -152,9 +156,21 @@ export default function AdminConsolePage() {
       const { count: qCount } = await supabase.from('support_queries').select('*', { count: 'exact', head: true });
       if (qCount !== null) setQueriesCount(qCount);
 
-      // Reservations local fallback
-      const savedRes = localStorage.getItem('flavor_haven_reservations');
-      if (savedRes) setReservations(JSON.parse(savedRes));
+      // Load reservations from Supabase
+      try {
+        const { data: resData } = await supabase.from('reservations').select('*').order('created_at', { ascending: false });
+        if (resData && resData.length > 0) {
+          setReservations(resData);
+        } else {
+          // Reservations local fallback
+          const savedRes = localStorage.getItem('flavor_haven_reservations');
+          if (savedRes) setReservations(JSON.parse(savedRes));
+        }
+      } catch (err) {
+        console.warn('Failed to load reservations in stats. Falling back to local storage.', err);
+        const savedRes = localStorage.getItem('flavor_haven_reservations');
+        if (savedRes) setReservations(JSON.parse(savedRes));
+      }
     } catch (e) {
       console.error('Error fetching admin overview metrics', e);
     } finally {
@@ -168,16 +184,23 @@ export default function AdminConsolePage() {
     }
   }, [profile]);
 
-  // Load Users tab
+  // Load Users tab with reviews for customer mood calculation
   useEffect(() => {
     if (activeTab === 'users' && profile?.role === 'admin') {
-      const fetchUsers = async () => {
+      const fetchUsersAndReviews = async () => {
         setLoadingUsers(true);
-        const { data } = await supabase.from('profiles').select('*').order('created_at', { ascending: false });
-        if (data) setUsersList(data);
-        setLoadingUsers(false);
+        try {
+          const { data: userData } = await supabase.from('profiles').select('*').order('created_at', { ascending: false });
+          if (userData) setUsersList(userData);
+          const { data: reviewData } = await supabase.from('reviews').select('*').order('created_at', { ascending: false });
+          if (reviewData) setReviewsList(reviewData);
+        } catch (e) {
+          console.error(e);
+        } finally {
+          setLoadingUsers(false);
+        }
       };
-      fetchUsers();
+      fetchUsersAndReviews();
     }
   }, [activeTab, profile]);
 
@@ -204,6 +227,29 @@ export default function AdminConsolePage() {
         setLoadingReviews(false);
       };
       fetchReviews();
+    }
+  }, [activeTab, profile]);
+
+  // Load Reservations tab
+  const [loadingReservations, setLoadingReservations] = useState(false);
+  useEffect(() => {
+    if (activeTab === 'reservations' && profile?.role === 'admin') {
+      const fetchReservations = async () => {
+        setLoadingReservations(true);
+        try {
+          const { data, error } = await supabase
+            .from('reservations')
+            .select('*')
+            .order('created_at', { ascending: false });
+          if (error) throw error;
+          if (data) setReservations(data);
+        } catch (err) {
+          console.error('Failed to load reservations in admin', err);
+        } finally {
+          setLoadingReservations(false);
+        }
+      };
+      fetchReservations();
     }
   }, [activeTab, profile]);
 
@@ -240,15 +286,15 @@ export default function AdminConsolePage() {
   }
 
   // Security gate
-  if (profile?.role !== 'admin' || adminViewMode !== 'admin') {
+  if (profile?.role !== 'admin') {
     return (
       <div className="min-h-screen flex flex-col justify-center items-center py-20 px-4 bg-[#FFFDF8]">
         <ShieldAlert className="h-16 w-16 text-rose-500 mb-3 animate-pulse" />
         <h2 className="text-xl font-bold text-slate-800">Access Denied</h2>
         <p className="text-slate-500 text-sm mt-1 text-center max-w-sm">
-          You need active Admin privileges to view this management console. (Viewing Mode: {adminViewMode === 'customer' ? 'Customer View' : 'Guest'})
+          You need active Admin privileges to view this management console.
         </p>
-        <Link href="/" className="mt-6 px-5 py-2.5 bg-brand-medium text-white font-bold rounded-xl text-xs cursor-pointer">
+        <Link href="/" className="mt-6 px-5 py-2.5 bg-brand-medium text-white font-bold rounded-xl text-xs cursor-pointer border-0">
           Return Home
         </Link>
       </div>
@@ -259,6 +305,28 @@ export default function AdminConsolePage() {
   const grossRevenue = orders.reduce((acc, o) => (o.status !== 'cancelled' ? acc + Number(o.total) : acc), 0);
   const activeOrdersCount = orders.filter((o) => ['received', 'preparing', 'cooking', 'delivery'].includes(o.status)).length;
   const pendingReservationsCount = reservations.filter((r) => r.status === 'pending').length;
+
+  const getCustomerMood = (userId: string) => {
+    const userReviews = reviewsList.filter((r) => r.user_id === userId);
+    const userOrders = orders.filter((o) => o.user_id === userId);
+
+    if (userReviews.length > 0) {
+      const avgRating = userReviews.reduce((acc, r) => acc + r.rating, 0) / userReviews.length;
+      if (avgRating >= 4.5) return { label: 'Delighted 😍', color: 'bg-emerald-50 text-emerald-700 border-emerald-205/50' };
+      if (avgRating >= 3.5) return { label: 'Happy 😊', color: 'bg-emerald-50/50 text-emerald-600 border-emerald-100/50' };
+      if (avgRating >= 2.5) return { label: 'Neutral 😐', color: 'bg-amber-50 text-amber-700 border-amber-205/50' };
+      return { label: 'Disappointed 😞', color: 'bg-rose-50 text-rose-700 border-rose-205/50' };
+    }
+
+    if (userOrders.length > 0) {
+      if (userOrders.length >= 3) {
+        return { label: 'Loyal & Content 🥰', color: 'bg-amber-50 text-amber-700 border-amber-205/50' };
+      }
+      return { label: 'Satisfied Client 🙂', color: 'bg-emerald-50/30 text-emerald-750 border-emerald-100/50' };
+    }
+
+    return { label: 'Curious Explorer 🧐', color: 'bg-slate-50 text-slate-500 border-slate-200/85' };
+  };
 
   // -- ORDER ACTIONS --
   const handleOrderStatusChange = async (orderId: string, nextStatus: any) => {
@@ -321,7 +389,7 @@ export default function AdminConsolePage() {
     setPrice('');
     setDiscountPrice('');
     if (categories.length > 0) setFoodCategoryId(categories[0].id);
-    setImage('/Image/amirali-mirhashemian-sc5sTPMrVfk-unsplash.jpg');
+    setImage('');
     setCalories('500');
     setCookTime('15');
     setStock('50');
@@ -330,6 +398,7 @@ export default function AdminConsolePage() {
     setIsVegan(false);
     setIsGlutenFree(false);
     setSpicyLevel('0');
+    setUploadError('');
     setFoodModalOpen(true);
   };
 
@@ -349,7 +418,66 @@ export default function AdminConsolePage() {
     setIsVegan(food.is_vegan);
     setIsGlutenFree(food.is_gluten_free);
     setSpicyLevel(food.spicy_level.toString());
+    setUploadError('');
     setFoodModalOpen(true);
+  };
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploading(true);
+    setUploadError('');
+
+    try {
+      if (isSupabaseConnected) {
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 9)}.${fileExt}`;
+        const filePath = `${fileName}`;
+
+        const { data, error } = await supabase.storage
+          .from('food-images')
+          .upload(filePath, file, {
+            cacheControl: '3600',
+            upsert: true,
+          });
+
+        if (error) {
+          throw error;
+        }
+
+        if (data) {
+          const { data: { publicUrl } } = supabase.storage
+            .from('food-images')
+            .getPublicUrl(filePath);
+
+          setImage(publicUrl);
+          setIsUploading(false);
+          return;
+        }
+      }
+    } catch (err: any) {
+      console.warn('Supabase storage upload failed, using Base64 local fallback:', err);
+    }
+
+    // Base64 local / mock fallback
+    try {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImage(reader.result as string);
+        setIsUploading(false);
+      };
+      reader.onerror = () => {
+        setUploadError('Failed to read local file.');
+        setIsUploading(false);
+      };
+      reader.readAsDataURL(file);
+      return;
+    } catch (fallbackErr) {
+      setUploadError('Fallback base64 reading failed.');
+    }
+
+    setIsUploading(false);
   };
 
   const handleFoodSubmit = async (e: React.FormEvent) => {
@@ -376,15 +504,24 @@ export default function AdminConsolePage() {
     };
 
     try {
+      let res;
       if (editingFood) {
-        await supabase.from('foods').update(foodData).eq('id', editingFood.id);
+        res = await supabase.from('foods').update(foodData).eq('id', editingFood.id);
       } else {
-        await supabase.from('foods').insert([foodData]);
+        res = await supabase.from('foods').insert([foodData]);
+      }
+      if (res && res.error) {
+        throw new Error(res.error.message);
       }
       await refreshFoods();
       setFoodModalOpen(false);
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
+      let msg = err.message || err;
+      if (msg.includes('row-level security') || msg.includes('policy')) {
+        msg += '\n\nEnsure you have run the Admin Write RLS policies from schema_v2.sql in your Supabase SQL editor to authorize write operations.';
+      }
+      alert('Failed to save food: ' + msg);
     } finally {
       setIsSubmittingFood(false);
     }
@@ -449,6 +586,48 @@ export default function AdminConsolePage() {
     }
   };
 
+  // -- RESERVATION ACTIONS --
+  const handleReservationStatusChange = async (resId: string, nextStatus: string) => {
+    try {
+      const { error } = await supabase
+        .from('reservations')
+        .update({ status: nextStatus })
+        .eq('id', resId);
+      if (error) throw error;
+      setReservations((prev) =>
+        prev.map((r) => (r.id === resId ? { ...r, status: nextStatus } : r))
+      );
+    } catch (e) {
+      console.error('Failed to update reservation status in DB', e);
+      // fallback local update
+      const updated = reservations.map((r) => (r.id === resId ? { ...r, status: nextStatus } : r));
+      setReservations(updated);
+      localStorage.setItem('flavor_haven_reservations', JSON.stringify(updated));
+    }
+  };
+
+  const handleReservationDelete = async (resId: string) => {
+    if (!window.confirm('Delete this reservation?')) return;
+    try {
+      const { error } = await supabase
+        .from('reservations')
+        .delete()
+        .eq('id', resId);
+      if (error) throw error;
+      setReservations((prev) => prev.filter((r) => r.id !== resId));
+      
+      // Update local storage fallback
+      const savedRes = localStorage.getItem('flavor_haven_reservations');
+      if (savedRes) {
+        const updated = JSON.parse(savedRes).filter((r: any) => r.id !== resId);
+        localStorage.setItem('flavor_haven_reservations', JSON.stringify(updated));
+      }
+    } catch (e) {
+      console.error('Failed to delete reservation in DB', e);
+      setReservations((prev) => prev.filter((r) => r.id !== resId));
+    }
+  };
+
   const handleSaveSettings = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSavingSettings(true);
@@ -489,14 +668,6 @@ export default function AdminConsolePage() {
 
           <div className="flex gap-2">
             <button
-              onClick={toggleAdminViewMode}
-              className="px-4 py-2 bg-slate-800 hover:bg-slate-900 text-white rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer border-0 shadow-sm"
-            >
-              <RefreshCw className="h-3.5 w-3.5" />
-              <span>Switch to Customer View</span>
-            </button>
-
-            <button
               onClick={signOut}
               className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer border-0 shadow-sm"
             >
@@ -514,7 +685,7 @@ export default function AdminConsolePage() {
               className={`w-full p-4 rounded-2xl text-left text-sm font-bold flex items-center gap-3 transition-all cursor-pointer border-0 ${
                 activeTab === 'overview'
                   ? 'bg-brand-medium text-white shadow-md shadow-brand-medium/20 scale-[1.02]'
-                  : 'bg-white/60 text-slate-700 hover:bg-white border border-emerald-100/25'
+                  : 'bg-white/40 text-slate-700 hover:bg-slate-900/5 hover:text-slate-900 border border-slate-150/10 hover:border-slate-200/50'
               }`}
             >
               <BarChart3 className="h-5 w-5" />
@@ -526,7 +697,7 @@ export default function AdminConsolePage() {
               className={`w-full p-4 rounded-2xl text-left text-sm font-bold flex items-center gap-3 transition-all cursor-pointer border-0 ${
                 activeTab === 'foods'
                   ? 'bg-brand-medium text-white shadow-md shadow-brand-medium/20 scale-[1.02]'
-                  : 'bg-white/60 text-slate-700 hover:bg-white border border-emerald-100/25'
+                  : 'bg-white/40 text-slate-700 hover:bg-slate-900/5 hover:text-slate-900 border border-slate-150/10 hover:border-slate-200/50'
               }`}
             >
               <Utensils className="h-5 w-5" />
@@ -538,7 +709,7 @@ export default function AdminConsolePage() {
               className={`w-full p-4 rounded-2xl text-left text-sm font-bold flex items-center gap-3 transition-all cursor-pointer border-0 ${
                 activeTab === 'categories'
                   ? 'bg-brand-medium text-white shadow-md shadow-brand-medium/20 scale-[1.02]'
-                  : 'bg-white/60 text-slate-700 hover:bg-white border border-emerald-100/25'
+                  : 'bg-white/40 text-slate-700 hover:bg-slate-900/5 hover:text-slate-900 border border-slate-150/10 hover:border-slate-200/50'
               }`}
             >
               <Layers className="h-5 w-5" />
@@ -550,7 +721,7 @@ export default function AdminConsolePage() {
               className={`w-full p-4 rounded-2xl text-left text-sm font-bold flex items-center gap-3 transition-all cursor-pointer border-0 relative ${
                 activeTab === 'orders'
                   ? 'bg-brand-medium text-white shadow-md shadow-brand-medium/20 scale-[1.02]'
-                  : 'bg-white/60 text-slate-700 hover:bg-white border border-emerald-100/25'
+                  : 'bg-white/40 text-slate-700 hover:bg-slate-900/5 hover:text-slate-900 border border-slate-150/10 hover:border-slate-200/50'
               }`}
             >
               <ClipboardList className="h-5 w-5" />
@@ -563,11 +734,28 @@ export default function AdminConsolePage() {
             </button>
 
             <button
+              onClick={() => setActiveTab('reservations')}
+              className={`w-full p-4 rounded-2xl text-left text-sm font-bold flex items-center gap-3 transition-all cursor-pointer border-0 relative ${
+                activeTab === 'reservations'
+                  ? 'bg-brand-medium text-white shadow-md shadow-brand-medium/20 scale-[1.02]'
+                  : 'bg-white/40 text-slate-700 hover:bg-slate-900/5 hover:text-slate-900 border border-slate-150/10 hover:border-slate-200/50'
+              }`}
+            >
+              <Calendar className="h-5 w-5" />
+              <span>Table Bookings</span>
+              {pendingReservationsCount > 0 && (
+                <span className="absolute right-4 top-4.5 px-2 py-0.5 bg-amber-500 text-white font-extrabold text-[9px] rounded-full animate-pulse">
+                  {pendingReservationsCount}
+                </span>
+              )}
+            </button>
+
+            <button
               onClick={() => setActiveTab('reviews')}
               className={`w-full p-4 rounded-2xl text-left text-sm font-bold flex items-center gap-3 transition-all cursor-pointer border-0 ${
                 activeTab === 'reviews'
                   ? 'bg-brand-medium text-white shadow-md shadow-brand-medium/20 scale-[1.02]'
-                  : 'bg-white/60 text-slate-700 hover:bg-white border border-emerald-100/25'
+                  : 'bg-white/40 text-slate-700 hover:bg-slate-900/5 hover:text-slate-900 border border-slate-150/10 hover:border-slate-200/50'
               }`}
             >
               <MessageSquare className="h-5 w-5" />
@@ -579,7 +767,7 @@ export default function AdminConsolePage() {
               className={`w-full p-4 rounded-2xl text-left text-sm font-bold flex items-center gap-3 transition-all cursor-pointer border-0 ${
                 activeTab === 'users'
                   ? 'bg-brand-medium text-white shadow-md shadow-brand-medium/20 scale-[1.02]'
-                  : 'bg-white/60 text-slate-700 hover:bg-white border border-emerald-100/25'
+                  : 'bg-white/40 text-slate-700 hover:bg-slate-900/5 hover:text-slate-900 border border-slate-150/10 hover:border-slate-200/50'
               }`}
             >
               <Users className="h-5 w-5" />
@@ -591,7 +779,7 @@ export default function AdminConsolePage() {
               className={`w-full p-4 rounded-2xl text-left text-sm font-bold flex items-center gap-3 transition-all cursor-pointer border-0 relative ${
                 activeTab === 'queries'
                   ? 'bg-brand-medium text-white shadow-md shadow-brand-medium/20 scale-[1.02]'
-                  : 'bg-white/60 text-slate-700 hover:bg-white border border-emerald-100/25'
+                  : 'bg-white/40 text-slate-700 hover:bg-slate-900/5 hover:text-slate-900 border border-slate-150/10 hover:border-slate-200/50'
               }`}
             >
               <Mail className="h-5 w-5" />
@@ -608,7 +796,7 @@ export default function AdminConsolePage() {
               className={`w-full p-4 rounded-2xl text-left text-sm font-bold flex items-center gap-3 transition-all cursor-pointer border-0 ${
                 activeTab === 'settings'
                   ? 'bg-brand-medium text-white shadow-md shadow-brand-medium/20 scale-[1.02]'
-                  : 'bg-white/60 text-slate-700 hover:bg-white border border-emerald-100/25'
+                  : 'bg-white/40 text-slate-700 hover:bg-slate-900/5 hover:text-slate-900 border border-slate-150/10 hover:border-slate-200/50'
               }`}
             >
               <Settings className="h-5 w-5" />
@@ -623,7 +811,7 @@ export default function AdminConsolePage() {
               <div className="space-y-8">
                 {/* Stats Grid */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-                  <div className="glass-panel rounded-3xl p-6 border border-emerald-100/50 bg-white/40 shadow-sm flex items-center gap-4">
+                  <div className="glass-panel glass-panel-hover rounded-3xl p-6 flex items-center gap-4 cursor-pointer">
                     <div className="p-3 bg-emerald-50 text-brand-medium rounded-2xl">
                       <DollarSign className="h-6 w-6" />
                     </div>
@@ -633,8 +821,8 @@ export default function AdminConsolePage() {
                     </div>
                   </div>
 
-                  <div className="glass-panel rounded-3xl p-6 border border-emerald-100/50 bg-white/40 shadow-sm flex items-center gap-4">
-                    <div className="p-3 bg-blue-50 text-blue-600 rounded-2xl">
+                  <div className="glass-panel glass-panel-hover rounded-3xl p-6 flex items-center gap-4 cursor-pointer">
+                    <div className="p-3 bg-rose-50 text-rose-600 rounded-2xl">
                       <ShoppingBag className="h-6 w-6" />
                     </div>
                     <div>
@@ -643,13 +831,13 @@ export default function AdminConsolePage() {
                     </div>
                   </div>
 
-                  <div className="glass-panel rounded-3xl p-6 border border-emerald-100/50 bg-white/40 shadow-sm flex items-center gap-4">
-                    <div className="p-3 bg-amber-50 text-amber-600 rounded-2xl">
+                  <div className="glass-panel glass-panel-hover rounded-3xl p-6 flex items-center gap-4 cursor-pointer">
+                    <div className="p-3 bg-amber-50 text-brand-accent rounded-2xl">
                       <Calendar className="h-6 w-6" />
                     </div>
                     <div>
-                      <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Pending Reservations</p>
-                      <p className="text-2xl font-extrabold text-slate-800">{pendingReservationsCount} Bookings</p>
+                      <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Pending Bookings</p>
+                      <p className="text-2xl font-extrabold text-slate-800">{pendingReservationsCount} Reservations</p>
                     </div>
                   </div>
                 </div>
@@ -670,15 +858,15 @@ export default function AdminConsolePage() {
                       { m: 'Jun', val: 90 },
                       { m: 'Jul', val: 82 },
                     ].map((item, idx) => (
-                      <div key={idx} className="flex-1 flex flex-col items-center gap-2 group">
-                        <span className="text-[9px] font-extrabold text-emerald-800 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <div key={idx} className="flex-1 h-full flex flex-col justify-end items-center gap-2 group">
+                        <span className="text-[9px] font-black text-brand-medium opacity-0 group-hover:opacity-100 transition-all duration-350 translate-y-1 group-hover:translate-y-0">
                           {item.val * 350} Tk
                         </span>
                         <div
                           style={{ height: `${item.val}%` }}
-                          className="w-full bg-emerald-100 group-hover:bg-brand-medium rounded-t-xl transition-all duration-300 shadow-sm"
+                          className="w-full bg-emerald-50 bg-gradient-to-t from-brand-medium to-emerald-400 group-hover:from-emerald-700 group-hover:to-emerald-500 rounded-t-xl transition-all duration-300 shadow-sm"
                         />
-                        <span className="text-[10px] font-bold text-slate-500">{item.m}</span>
+                        <span className="text-[10px] font-bold text-slate-500 mt-1">{item.m}</span>
                       </div>
                     ))}
                   </div>
@@ -717,11 +905,23 @@ export default function AdminConsolePage() {
                         {localFoods.map((food) => (
                           <tr key={food.id}>
                             <td className="py-3">
-                              <img
-                                src={food.image || '/Image/amirali-mirhashemian-sc5sTPMrVfk-unsplash.jpg'}
-                                alt={food.title}
-                                className="w-12 h-12 object-cover rounded-lg border border-slate-200"
-                              />
+                              {food.image ? (
+                                <img
+                                  src={food.image}
+                                  alt={food.title}
+                                  className="w-12 h-12 object-cover rounded-lg border border-slate-200"
+                                />
+                              ) : (
+                                <div className="w-12 h-12 bg-emerald-50 rounded-lg flex items-center justify-center border border-emerald-100 text-brand-medium font-bold text-lg select-none">
+                                  {food.category_id === 'c1000000-0000-0000-0000-000000000007' || food.category_id === '7' ? (
+                                    '☕'
+                                  ) : food.category_id === 'c1000000-0000-0000-0000-000000000006' || food.category_id === '6' ? (
+                                    '🍰'
+                                  ) : (
+                                    '🥘'
+                                  )}
+                                </div>
+                              )}
                             </td>
                             <td className="py-3 font-bold text-slate-800">{food.title}</td>
                             <td className="py-3 font-bold text-slate-600">{food.price} Tk</td>
@@ -844,6 +1044,97 @@ export default function AdminConsolePage() {
               </div>
             )}
 
+            {/* Reservations Tab */}
+            {activeTab === 'reservations' && (
+              <div className="space-y-6 animate-in fade-in duration-200">
+                <div>
+                  <h3 className="text-xl font-bold text-slate-800">Table Bookings Manager</h3>
+                  <p className="text-xs text-slate-500 mt-1">Approve, cancel, or delete customer table reservations.</p>
+                </div>
+
+                <div className="glass-panel rounded-3xl p-6 border border-emerald-100/50 bg-white/40 shadow-sm overflow-hidden">
+                  {loadingReservations ? (
+                    <div className="py-12 flex justify-center">
+                      <RefreshCw className="h-8 w-8 animate-spin text-brand-medium" />
+                    </div>
+                  ) : reservations.length === 0 ? (
+                    <p className="py-8 text-center text-slate-400 text-xs font-medium">No reservations found.</p>
+                  ) : (
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-left text-xs">
+                        <thead>
+                          <tr className="border-b border-slate-100 text-slate-400 font-extrabold uppercase tracking-widest text-[10px]">
+                            <th className="pb-3">Date & Time</th>
+                            <th className="pb-3">Customer</th>
+                            <th className="pb-3">Phone</th>
+                            <th className="pb-3">Guests</th>
+                            <th className="pb-3">Status</th>
+                            <th className="pb-3 text-right">Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100 text-slate-700 font-medium">
+                          {reservations.map((res) => {
+                            let statusBadge = '';
+                            if (res.status === 'confirmed') {
+                              statusBadge = 'bg-emerald-50 text-emerald-700 border border-emerald-100/50';
+                            } else if (res.status === 'cancelled') {
+                              statusBadge = 'bg-rose-50 text-rose-700 border border-rose-100/50';
+                            } else {
+                              statusBadge = 'bg-amber-50 text-amber-700 border border-amber-100/50';
+                            }
+
+                            return (
+                              <tr key={res.id} className="hover:bg-emerald-50/10 transition-colors">
+                                <td className="py-4">
+                                  <div className="font-bold text-slate-800">{res.date}</div>
+                                  <div className="text-[10px] text-slate-400 mt-0.5">{res.time}</div>
+                                </td>
+                                <td className="py-4 font-semibold text-slate-700">{res.name}</td>
+                                <td className="py-4 font-mono text-slate-600">{res.phone}</td>
+                                <td className="py-4 font-bold text-slate-800">{res.guests} Guests</td>
+                                <td className="py-4">
+                                  <span className={`px-2.5 py-1 rounded-full text-[9px] font-black border uppercase tracking-wider ${statusBadge}`}>
+                                    {res.status}
+                                  </span>
+                                </td>
+                                <td className="py-4 text-right space-x-1.5">
+                                  {res.status !== 'confirmed' && (
+                                    <button
+                                      onClick={() => handleReservationStatusChange(res.id, 'confirmed')}
+                                      className="px-3 py-1.5 bg-brand-medium hover:bg-emerald-800 text-white rounded-xl text-[10px] font-black tracking-wider uppercase transition-all cursor-pointer border-0 shadow-sm shadow-brand-medium/10"
+                                      title="Confirm Reservation"
+                                    >
+                                      Confirm
+                                    </button>
+                                  )}
+                                  {res.status !== 'cancelled' && (
+                                    <button
+                                      onClick={() => handleReservationStatusChange(res.id, 'cancelled')}
+                                      className="px-3 py-1.5 bg-rose-50 text-rose-600 hover:bg-rose-600 hover:text-white rounded-xl text-[10px] font-black tracking-wider uppercase transition-all cursor-pointer border-0"
+                                      title="Cancel Reservation"
+                                    >
+                                      Cancel
+                                    </button>
+                                  )}
+                                  <button
+                                    onClick={() => handleReservationDelete(res.id)}
+                                    className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-all border-0 bg-transparent cursor-pointer inline-flex items-center justify-center align-middle"
+                                    title="Delete Reservation"
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </button>
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
             {/* Reviews Tab */}
             {activeTab === 'reviews' && (
               <div className="space-y-6">
@@ -919,18 +1210,29 @@ export default function AdminConsolePage() {
                     <div className="overflow-x-auto">
                       <table className="w-full text-left text-xs">
                         <thead>
-                          <tr className="border-b border-slate-100 text-slate-400 font-bold uppercase tracking-wider">
+                          <tr className="border-b border-slate-100 text-slate-400 font-extrabold uppercase tracking-widest text-[10px]">
                             <th className="pb-3">Full Name</th>
                             <th className="pb-3">Email Address</th>
+                            <th className="pb-3">Customer Mood</th>
                             <th className="pb-3">Role Authority</th>
                             <th className="pb-3">Reward Points</th>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-100 text-slate-700 font-medium">
                           {usersList.map((u) => (
-                            <tr key={u.id}>
+                            <tr key={u.id} className="hover:bg-emerald-50/10 transition-colors">
                               <td className="py-4 font-bold text-slate-850">{u.name}</td>
                               <td className="py-4 text-slate-600">{u.email}</td>
+                              <td className="py-4">
+                                {(() => {
+                                  const mood = getCustomerMood(u.id);
+                                  return (
+                                    <span className={`px-2.5 py-1 rounded-full text-[9px] font-black border uppercase tracking-wider ${mood.color}`}>
+                                      {mood.label}
+                                    </span>
+                                  );
+                                })()}
+                              </td>
                               <td className="py-4">
                                 <span className={`px-2 py-0.5 rounded-full text-[8.5px] font-extrabold tracking-wide uppercase ${
                                   u.role === 'admin' ? 'bg-amber-100 text-amber-700' : 'bg-emerald-100 text-emerald-700'
@@ -1144,13 +1446,29 @@ export default function AdminConsolePage() {
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="uppercase tracking-wider">Image Link / Path</label>
-                  <input
-                    type="text"
-                    value={image}
-                    onChange={(e) => setImage(e.target.value)}
-                    className="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold focus:outline-none focus:border-brand-medium"
-                  />
+                  <label className="uppercase tracking-wider block mb-1">Food Image</label>
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl border border-slate-200 overflow-hidden flex-shrink-0 bg-slate-50 flex items-center justify-center text-lg">
+                      {image ? (
+                        <img src={image} alt="Preview" className="w-full h-full object-cover" />
+                      ) : (
+                        '🥘'
+                      )}
+                    </div>
+                    <div className="flex-1">
+                      <label className="relative cursor-pointer inline-flex items-center justify-center px-3 py-2 border border-slate-250 rounded-xl bg-white hover:bg-slate-50 text-[11px] font-bold text-slate-700 transition-colors shadow-sm w-full">
+                        <span>{isUploading ? 'Uploading...' : 'Choose File'}</span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={handleImageUpload}
+                          className="sr-only"
+                          disabled={isUploading}
+                        />
+                      </label>
+                    </div>
+                  </div>
+                  {uploadError && <p className="text-[10px] text-rose-500 font-semibold">{uploadError}</p>}
                 </div>
               </div>
 

@@ -11,7 +11,7 @@ import { Order } from '@/types';
 
 export default function UserDashboardPage() {
   const router = useRouter();
-  const { profile, loading, adminViewMode, toggleAdminViewMode } = useAuth();
+  const { profile, loading } = useAuth();
   const { foods, favorites, toggleFavorite, getReservations } = useApp();
   const [orders, setOrders] = useState<Order[]>([]);
   const [activeTab, setActiveTab] = useState<'profile' | 'orders' | 'wishlist' | 'points' | 'reservations'>('profile');
@@ -75,26 +75,15 @@ export default function UserDashboardPage() {
             <h1 className="text-4xl font-extrabold text-slate-800 tracking-tight">Your Dashboard</h1>
             <p className="text-slate-500 text-sm mt-1">Manage orders, redeem rewards, and review reservations.</p>
           </div>
-          {/* Admin Mode Toggle */}
+          {/* Admin Dashboard Redirect Button */}
           {profile.role === 'admin' && (
-            <div className="flex gap-2 bg-white/70 border border-slate-200 p-2 rounded-2xl shadow-sm">
-              <button
-                onClick={toggleAdminViewMode}
-                className="px-4 py-2 bg-slate-800 hover:bg-slate-900 text-white rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer border-0"
-              >
-                <RefreshCw className="h-3.5 w-3.5" />
-                <span>View Mode: {adminViewMode === 'admin' ? 'Admin' : 'Customer'}</span>
-              </button>
-              {adminViewMode === 'admin' && (
-                <Link
-                  href="/admin"
-                  className="px-4 py-2 bg-brand-medium hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer"
-                >
-                  <Key className="h-3.5 w-3.5" />
-                  <span>Admin Dashboard</span>
-                </Link>
-              )}
-            </div>
+            <Link
+              href="/admin"
+              className="px-4 py-2 bg-[#166534] hover:bg-[#114f29] text-white rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer border-0 shadow-sm"
+            >
+              <Key className="h-3.5 w-3.5" />
+              <span>Admin Dashboard</span>
+            </Link>
           )}
         </div>
 
@@ -256,11 +245,23 @@ export default function UserDashboardPage() {
                       className="glass-panel rounded-2xl p-4 border border-emerald-100/50 bg-white/40 flex items-center justify-between gap-4"
                     >
                       <div className="flex items-center gap-3">
-                        <img
-                          src={food.image || '/Image/amirali-mirhashemian-sc5sTPMrVfk-unsplash.jpg'}
-                          alt={food.title}
-                          className="w-14 h-14 object-cover rounded-xl border border-slate-200"
-                        />
+                        {food.image ? (
+                          <img
+                            src={food.image}
+                            alt={food.title}
+                            className="w-14 h-14 object-cover rounded-xl border border-slate-200"
+                          />
+                        ) : (
+                          <div className="w-14 h-14 bg-emerald-50 rounded-xl flex items-center justify-center border border-emerald-100/30 text-brand-medium font-bold select-none text-xl">
+                            {food.category_id === 'c1000000-0000-0000-0000-000000000007' || food.category_id === '7' ? (
+                              '☕'
+                            ) : food.category_id === 'c1000000-0000-0000-0000-000000000006' || food.category_id === '6' ? (
+                              '🍰'
+                            ) : (
+                              '🥘'
+                            )}
+                          </div>
+                        )}
                         <div>
                           <h4 className="text-sm font-extrabold text-slate-800 truncate max-w-[120px]">
                             {food.title}

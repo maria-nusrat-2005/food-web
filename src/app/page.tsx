@@ -40,38 +40,8 @@ export default function Home() {
         console.warn('Failed to load reviews from Supabase. Falling back to local storage.', err);
       }
 
-      // Local storage fallback / initial seeding
-      let localReviews = JSON.parse(localStorage.getItem('flavor_haven_reviews') || '[]');
-      if (localReviews.length === 0) {
-        localReviews = [
-          {
-            id: 'init-rev-1',
-            client_name: 'Anvi Rahman',
-            avatar_url: null,
-            rating: 5,
-            comment: 'The Kacchi Biryani here is absolutely authentic! Saffron notes, tender meat, and perfect grains of rice. Definitely coming back for more.',
-            created_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString()
-          },
-          {
-            id: 'init-rev-2',
-            client_name: 'Nafis Imtiaz',
-            avatar_url: null,
-            rating: 5,
-            comment: 'Amazing customer service and cozy environment. The premium coffee is rich and smells heavenly. A great place to work or hang out with friends.',
-            created_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString()
-          },
-          {
-            id: 'init-rev-3',
-            client_name: 'Sajid Hasan',
-            avatar_url: null,
-            rating: 4,
-            comment: 'Had their Beef Naga Burger. It\'s incredibly spicy but so delicious. The bun was soft and the patty was juicy. Highly recommended for spice lovers!',
-            created_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString()
-          }
-        ];
-        localStorage.setItem('flavor_haven_reviews', JSON.stringify(localReviews));
-      }
-      
+      // Local storage fallback
+      const localReviews = JSON.parse(localStorage.getItem('flavor_haven_reviews') || '[]');
       const generalReviews = localReviews.filter((r: any) => !r.food_id);
       setReviews(generalReviews);
     }
@@ -80,9 +50,9 @@ export default function Home() {
 
   // Rotating Banners Data
   const banners = [
-    { title: '20% Off on Special Coffee!', desc: 'Enjoy our rich, house-roasted organic beans daily.', img: '/Image/clay-banks-_wkd7XBRfU4-unsplash.jpg' },
-    { title: 'Try our Beef Naga Burger!', desc: 'Spiced with authentic local Naga chili paste and cheese.', img: '/Image/amirali-mirhashemian-sc5sTPMrVfk-unsplash.jpg' },
-    { title: 'Fresh Watermelon Juices!', desc: '100% natural, chilled blends for hot summer days.', img: '/Image/rohollah-saberi-21QZGQKpOYE-unsplash.jpg' }
+    { title: '20% Off on Special Coffee!', desc: 'Enjoy our rich, house-roasted organic beans daily.', bgGradient: 'from-emerald-950 via-[#166534] to-emerald-900' },
+    { title: 'Try our Beef Naga Burger!', desc: 'Spiced with authentic local Naga chili paste and cheese.', bgGradient: 'from-amber-950 via-amber-800 to-amber-700' },
+    { title: 'Fresh Watermelon Juices!', desc: '100% natural, chilled blends for hot summer days.', bgGradient: 'from-teal-950 via-emerald-800 to-[#166534]' }
   ];
 
   // Rotate banners automatically
@@ -150,12 +120,9 @@ export default function Home() {
       isLocalOnly = true;
     }
 
-    if (success || isLocalOnly) {
-      setReviews((prev) => [newReview, ...prev]);
-      return { success: true, isLocalOnly };
-    }
-
-    return { success: false, isLocalOnly: true };
+    // Reload UI reviews list
+    setReviews([newReview, ...reviews]);
+    return { success, isLocalOnly };
   };
 
   // Featured foods (Chef's Choice items)
@@ -164,10 +131,10 @@ export default function Home() {
   const cartCount = cart.reduce((acc, item) => acc + item.quantity, 0);
 
   return (
-    <div className="min-h-screen flex flex-col pb-12">
+    <div className="min-h-screen bg-[#FFFDF8] flex flex-col items-center">
       {/* Warning banner */}
       {!isSupabaseConnected && (
-        <div className="bg-amber-500/10 border-b border-amber-200/20 py-2.5 px-4 text-center text-xs font-medium text-amber-700 flex items-center justify-center gap-2">
+        <div className="bg-amber-500/10 border-b border-amber-200/20 py-2.5 px-4 text-center text-xs font-medium text-amber-700 flex items-center justify-center gap-2 w-full">
           <span>Operating on mock local storage modes. Connect Supabase credentials in <code>.env.local</code>.</span>
         </div>
       )}
@@ -186,12 +153,8 @@ export default function Home() {
       {/* Hero Interactive Banner Slider */}
       <header className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 w-full">
         <div className="relative h-[320px] md:h-[420px] rounded-[36px] overflow-hidden shadow-xl border border-emerald-100/50">
-          {/* Active Slide Image */}
-          <img
-            src={banners[activeBannerIdx].img}
-            alt={banners[activeBannerIdx].title}
-            className="absolute inset-0 w-full h-full object-cover brightness-[0.4] transition-all duration-700"
-          />
+          {/* Active Slide Background Gradient */}
+          <div className={`absolute inset-0 bg-gradient-to-br ${banners[activeBannerIdx].bgGradient} transition-all duration-700`} />
 
           {/* Slide Text Content overlay */}
           <div className="absolute inset-0 p-8 md:p-16 flex flex-col justify-center items-start text-white max-w-xl space-y-4">
@@ -297,7 +260,7 @@ export default function Home() {
             </p>
           </div>
           <Link
-            href="/about"
+            href="/book"
             className="px-8 py-4 bg-white text-slate-850 font-extrabold rounded-2xl text-sm shadow hover:bg-slate-100 hover:scale-105 active:scale-95 transition-all flex items-center gap-2 cursor-pointer"
           >
             <span>Book a Table Now</span>

@@ -92,11 +92,23 @@ export default function CartDrawer({
                       key={item.food.id}
                       className="flex items-center gap-4 bg-slate-50 border border-slate-100 rounded-xl p-3.5 hover:border-emerald-100/50 transition-colors"
                     >
-                      <img
-                        src={item.food.image || '/Image/amirali-mirhashemian-sc5sTPMrVfk-unsplash.jpg'}
-                        alt={item.food.title}
-                        className="w-16 h-16 rounded-lg object-cover bg-slate-100 flex-shrink-0"
-                      />
+                      {item.food.image ? (
+                        <img
+                          src={item.food.image}
+                          alt={item.food.title}
+                          className="w-16 h-16 rounded-lg object-cover bg-slate-100 flex-shrink-0"
+                        />
+                      ) : (
+                        <div className="w-16 h-16 rounded-lg bg-emerald-50 text-brand-medium flex items-center justify-center flex-shrink-0 border border-emerald-100/30 font-bold select-none text-lg">
+                          {item.food.category_id === 'c1000000-0000-0000-0000-000000000007' || item.food.category_id === '7' ? (
+                            '☕'
+                          ) : item.food.category_id === 'c1000000-0000-0000-0000-000000000006' || item.food.category_id === '6' ? (
+                            '🍰'
+                          ) : (
+                            '🥘'
+                          )}
+                        </div>
+                      )}
                       <div className="flex-1 min-w-0">
                         <h4 className="text-sm font-bold text-slate-800 truncate">{item.food.title}</h4>
                         <p className="text-xs text-brand-medium font-bold mt-0.5">
