@@ -27,6 +27,7 @@ export default function ContactPage() {
   const [email, setEmail] = useState('');
   const [msg, setMsg] = useState('');
   const [submitted, setSubmitted] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
 
   useEffect(() => {
     if (profile) {
@@ -72,6 +73,8 @@ export default function ContactPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name || !email || !msg) return;
+    setFormError(null);
+    setSubmitted(false);
 
     try {
       const { error } = await supabase
@@ -85,17 +88,11 @@ export default function ContactPage() {
 
       if (error) throw error;
       setSubmitted(true);
-      setName(profile?.name || '');
-      setEmail(profile?.email || '');
       setMsg('');
       setTimeout(() => setSubmitted(false), 5000);
-    } catch (err) {
-      console.warn('DB query submission failed. Mocking local success.', err);
-      setSubmitted(true);
-      setName(profile?.name || '');
-      setEmail(profile?.email || '');
-      setMsg('');
-      setTimeout(() => setSubmitted(false), 5000);
+    } catch (err: any) {
+      console.error('DB query submission failed:', err);
+      setFormError(err.message || 'Failed to submit inquiry. Check database connection.');
     }
   };
 
@@ -228,6 +225,12 @@ export default function ContactPage() {
                 {submitted && (
                   <div className="p-3 bg-emerald-500/10 border border-emerald-500/25 rounded-xl text-xs text-emerald-600 font-medium">
                     Message sent successfully! Our support agents will write back shortly.
+                  </div>
+                )}
+
+                {formError && (
+                  <div className="p-3 bg-rose-500/10 border border-rose-500/25 rounded-xl text-xs text-rose-600 font-medium">
+                    {formError}
                   </div>
                 )}
 
