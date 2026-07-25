@@ -40,7 +40,7 @@ export default function Navbar({
   const [notifOpen, setNotifOpen] = useState(false);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const { notifications, markNotificationsAsRead } = useApp();
-  const { profile, signOut, isMockUser, toggleMockAuthMode, openAuthModal } = useAuth();
+  const { profile, signOut, openAuthModal } = useAuth();
 
   const unreadNotifCount = notifications.filter((n) => !n.read).length;
 
@@ -172,10 +172,8 @@ export default function Navbar({
                         }`}>
                           {profile.role}
                         </span>
-                        <span className={`px-2 py-0.5 rounded-full text-[8px] font-extrabold tracking-wide uppercase ${
-                          isMockUser ? 'bg-amber-100 text-amber-600' : 'bg-green-100 text-green-700'
-                        }`}>
-                          {isMockUser ? 'Mock Mode' : 'Live Mode'}
+                        <span className={`px-2 py-0.5 rounded-full text-[8px] font-extrabold tracking-wide uppercase bg-emerald-100 text-emerald-700`}>
+                          Live Mode
                         </span>
                       </div>
                     </div>
@@ -201,18 +199,6 @@ export default function Navbar({
                         </Link>
                       )}
 
-                      {/* Debug Mode Switcher */}
-                      <button
-                        onClick={() => {
-                          toggleMockAuthMode();
-                          setProfileMenuOpen(false);
-                        }}
-                        className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold text-slate-750 hover:bg-slate-100 transition-colors cursor-pointer text-left"
-                      >
-                        <RefreshCw className="h-4 w-4 text-slate-450" />
-                        <span>Switch to {isMockUser ? 'Live Mode' : 'Mock Mode'}</span>
-                      </button>
-
                       <div className="border-t border-slate-100 my-2 pt-2">
                         <button
                           onClick={async () => {
@@ -236,14 +222,6 @@ export default function Navbar({
                   className="px-5 py-2.5 rounded-full text-xs font-bold bg-brand-medium text-white hover:bg-emerald-700 transition-all shadow-sm hover:shadow active:scale-95 cursor-pointer border-0"
                 >
                   Sign In
-                </button>
-                {/* Micro Toggle for Guest users to change modes */}
-                <button
-                  onClick={toggleMockAuthMode}
-                  title={`Switch to ${isMockUser ? 'Live Mode' : 'Mock Mode'}`}
-                  className="p-2 rounded-full hover:bg-slate-100 border border-transparent hover:border-slate-200 transition-all cursor-pointer text-slate-400 hover:text-slate-655"
-                >
-                  <RefreshCw className="h-4 w-4" />
                 </button>
               </div>
             )}
@@ -320,7 +298,7 @@ export default function Navbar({
                         {profile.role}
                       </span>
                       <span className="px-1.5 py-0.5 rounded-full bg-slate-100 text-[8px] font-bold text-slate-600">
-                        {isMockUser ? 'Mock' : 'Live'}
+                        Live
                       </span>
                     </div>
                   </div>
@@ -347,16 +325,7 @@ export default function Navbar({
                     </Link>
                   )}
 
-                  <button
-                    onClick={() => {
-                      toggleMockAuthMode();
-                      setMobileMenuOpen(false);
-                    }}
-                    className="w-full text-left px-4 py-2 text-xs font-bold text-slate-750 hover:bg-slate-100 rounded-xl flex items-center gap-2 cursor-pointer border-0 bg-transparent"
-                  >
-                    <RefreshCw className="h-4 w-4 text-slate-400" />
-                    <span>Switch to {isMockUser ? 'Live Mode' : 'Mock Mode'}</span>
-                  </button>
+
 
                   <button
                     onClick={async () => {
@@ -381,16 +350,7 @@ export default function Navbar({
                 >
                   Sign In
                 </button>
-                <button
-                  onClick={() => {
-                    toggleMockAuthMode();
-                    setMobileMenuOpen(false);
-                  }}
-                  className="w-full py-2 text-center text-xs font-bold text-slate-650 hover:bg-slate-100 rounded-xl border border-slate-200 transition-all flex items-center justify-center gap-1.5 cursor-pointer bg-transparent"
-                >
-                  <RefreshCw className="h-3.5 w-3.5" />
-                  <span>Mode: {isMockUser ? 'Mock' : 'Live'}</span>
-                </button>
+
               </div>
             )}
           </div>

@@ -179,74 +179,35 @@ export default function AuthModal() {
           </p>
         </div>
 
-        {/* Auth Mode Badge */}
-        <div className="mb-5 p-2.5 bg-emerald-50/40 border border-emerald-100/40 rounded-2xl flex items-center justify-between text-xs">
-          <div className="flex flex-col">
-            <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-wide">Auth Mode</span>
-            <span className={`font-bold ${isMockUser ? 'text-amber-600' : 'text-emerald-700'}`}>
-              {isMockUser ? '🧪 Offline Mock Mode' : '🟢 Live Supabase Mode'}
-            </span>
-          </div>
+        {/* Mode Toggle Selector: Sign In / Sign Up */}
+        <div className="flex bg-slate-100 p-1.5 rounded-2xl mb-5 text-xs font-bold text-slate-500">
           <button
+            type="button"
             onClick={() => {
-              toggleMockAuthMode();
+              setAuthTab('signin');
               setError(null);
               setSuccess(null);
             }}
-            type="button"
-            className="px-2.5 py-1 bg-slate-800 hover:bg-slate-900 text-white rounded-lg text-[9px] font-extrabold transition-all flex items-center gap-1 cursor-pointer border-0"
+            className={`flex-1 py-2 rounded-xl transition-all cursor-pointer border-0 ${
+              authTab === 'signin' ? 'bg-white text-slate-850 shadow-sm font-extrabold' : 'hover:text-slate-800 bg-transparent'
+            }`}
           >
-            <RefreshCw className="h-2.5 w-2.5" />
-            <span>Switch</span>
+            Sign In
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setAuthTab('signup');
+              setError(null);
+              setSuccess(null);
+            }}
+            className={`flex-1 py-2 rounded-xl transition-all cursor-pointer border-0 ${
+              authTab === 'signup' ? 'bg-white text-slate-850 shadow-sm font-extrabold' : 'hover:text-slate-800 bg-transparent'
+            }`}
+          >
+            Sign Up
           </button>
         </div>
-
-        {/* Mock Mode Credentials Tip */}
-        {isMockUser && (
-          <div className="mb-5 p-3.5 bg-amber-500/10 border border-amber-500/20 rounded-2xl text-xs text-amber-800 space-y-1 animate-in slide-in-from-top duration-200">
-            <p className="font-extrabold flex items-center gap-1">
-              <span>💡 Mock Mode Tips</span>
-            </p>
-            <p className="text-[11px] leading-relaxed opacity-90">
-              Enter <strong>any email and password</strong> to log in instantly.
-            </p>
-            <p className="text-[11px] leading-relaxed opacity-90">
-              Use <strong><code>admin@flavorhaven.com</code></strong> for Admin access.
-            </p>
-          </div>
-        )}
-
-        {/* Mode Toggle Selector: Sign In / Sign Up */}
-        {!isMockUser && (
-          <div className="flex bg-slate-100 p-1.5 rounded-2xl mb-5 text-xs font-bold text-slate-500">
-            <button
-              type="button"
-              onClick={() => {
-                setAuthTab('signin');
-                setError(null);
-                setSuccess(null);
-              }}
-              className={`flex-1 py-2 rounded-xl transition-all cursor-pointer border-0 ${
-                authTab === 'signin' ? 'bg-white text-slate-850 shadow-sm font-extrabold' : 'hover:text-slate-800 bg-transparent'
-              }`}
-            >
-              Sign In
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setAuthTab('signup');
-                setError(null);
-                setSuccess(null);
-              }}
-              className={`flex-1 py-2 rounded-xl transition-all cursor-pointer border-0 ${
-                authTab === 'signup' ? 'bg-white text-slate-850 shadow-sm font-extrabold' : 'hover:text-slate-800 bg-transparent'
-              }`}
-            >
-              Sign Up
-            </button>
-          </div>
-        )}
 
         {/* Subtabs for Sign In (Password / OTP) */}
         {authTab === 'signin' && (

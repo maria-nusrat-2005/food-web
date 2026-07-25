@@ -46,7 +46,7 @@ const MOCK_ADMIN_PROFILE: Profile = {
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
-  const [isMockUser, setIsMockUser] = useState(true);
+  const [isMockUser, setIsMockUser] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
 
   const openAuthModal = () => setIsAuthModalOpen(true);
@@ -64,28 +64,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  // Initialize mode and load initial session
+  // Initialize live session
   useEffect(() => {
-    // Check if Supabase variables are set and if we saved a mode preference
-    const hasKeys = !!process.env.NEXT_PUBLIC_SUPABASE_URL && !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-    const savedMockPreference = localStorage.getItem('flavor_haven_mock_mode');
-    
-    // Default to mock mode if explicitly saved as true, OR if Supabase keys are missing
-    const useMock = savedMockPreference === 'true' || !hasKeys;
-    setIsMockUser(useMock);
-
     async function checkUser() {
       try {
         setLoading(true);
-        if (useMock) {
-          // In mock mode, default to customer profile
-          const savedMockRole = localStorage.getItem('flavor_haven_mock_role') || 'customer';
-          setProfile(savedMockRole === 'admin' ? MOCK_ADMIN_PROFILE : MOCK_CUSTOMER_PROFILE);
-          setLoading(false);
-          return;
-        }
-
-        // Live mode initialization
         const { data: { session } } = await supabase.auth.getSession();
 
         if (session?.user) {
@@ -124,9 +107,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setProfile(null);
         }
       } catch (err) {
-        console.warn('Supabase Auth error. Falling back to mock profile.', err);
-        setProfile(MOCK_CUSTOMER_PROFILE);
-        setIsMockUser(true);
+        console.error('Supabase Auth connection error:', err);
+        setProfile(null);
       } finally {
         setLoading(false);
       }
@@ -135,9 +117,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     checkUser();
   }, []);
 
-  // Listen to auth state changes when NOT in mock mode
+  // Listen to auth state changes
   useEffect(() => {
-    if (isMockUser) return;
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       setLoading(true);
@@ -172,17 +153,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Compatibility fallback signIn
   const signIn = async (email: string): Promise<boolean> => {
-    if (isMockUser) {
-      if (email.includes('admin')) {
-        setProfile(MOCK_ADMIN_PROFILE);
-        localStorage.setItem('flavor_haven_mock_role', 'admin');
-      } else {
-        setProfile(MOCK_CUSTOMER_PROFILE);
-        localStorage.setItem('flavor_haven_mock_role', 'customer');
-      }
-      return true;
-    }
-    // Live mode fallback: try OTP sign in
     const res = await signInWithOtp(email);
     return res.success;
   };
@@ -191,18 +161,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signInWithPassword = async (email: string, password: string): Promise<{ success: boolean; error: string | null }> => {
     try {
       setLoading(true);
-      if (isMockUser) {
-        // Mock sign in simulation
-        if (email.includes('admin')) {
-          setProfile(MOCK_ADMIN_PROFILE);
-          localStorage.setItem('flavor_haven_mock_role', 'admin');
-        } else {
-          setProfile(MOCK_CUSTOMER_PROFILE);
-          localStorage.setItem('flavor_haven_mock_role', 'customer');
-        }
-        return { success: true, error: null };
-      }
-
       const { data, error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) throw error;
 
@@ -218,16 +176,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signInWithOtp = async (email: string): Promise<{ success: boolean; error: string | null }> => {
     try {
       setLoading(true);
-      if (isMockUser) {
-        // Mock OTP sign in
-        if (email.includes('admin')) {
-          setProfile(MOCK_ADMIN_PROFILE);
-        } else {
-          setProfile(MOCK_CUSTOMER_PROFILE);
-        }
-        return { success: true, error: null };
-      }
-
       const { error } = await supabase.auth.signInWithOtp({
         email,
         options: {
@@ -248,18 +196,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signUp = async (email: string, password: string, name: string): Promise<{ success: boolean; error: string | null }> => {
     try {
       setLoading(true);
-      if (isMockUser) {
-        // Mock sign up simulation
-        const newMockProfile = {
-          ...MOCK_CUSTOMER_PROFILE,
-          name,
-          email,
-          reward_points: 100
-        };
-        setProfile(newMockProfile);
-        return { success: true, error: null };
-      }
-
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -302,9 +238,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signOut = async () => {
     try {
       setLoading(true);
-      if (!isMockUser) {
-        await supabase.auth.signOut();
-      }
+      await supabase.auth.signOut();
       setProfile(null);
     } catch (err) {
       console.error('Error signing out', err);
@@ -318,56 +252,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setProfile((prev) => {
       if (!prev) return null;
       const updated = { ...prev, reward_points: prev.reward_points + pointsToAdd };
-      if (!isMockUser) {
-        supabase
-          .from('profiles')
-          .update({ reward_points: updated.reward_points })
-          .eq('id', prev.id)
-          .then();
-      }
+      supabase
+        .from('profiles')
+        .update({ reward_points: updated.reward_points })
+        .eq('id', prev.id)
+        .then();
       return updated;
     });
   };
 
-  // Toggle Mock Roles (Customer <-> Admin)
+  // Toggle Mock Roles (Disabled)
   const toggleMockRole = () => {
-    setProfile((prev) => {
-      const nextProfile = prev?.role === 'customer' ? MOCK_ADMIN_PROFILE : MOCK_CUSTOMER_PROFILE;
-      localStorage.setItem('flavor_haven_mock_role', nextProfile.role);
-      return nextProfile;
-    });
+    console.log('Mock role toggling is disabled.');
   };
 
-  // Toggle between Mock and Live Mode
+  // Toggle between Mock and Live Mode (Disabled)
   const toggleMockAuthMode = () => {
-    const nextMockState = !isMockUser;
-    setIsMockUser(nextMockState);
-    localStorage.setItem('flavor_haven_mock_mode', String(nextMockState));
-    
-    // Clear profile and reload
-    setProfile(null);
-    setLoading(true);
-    
-    if (nextMockState) {
-      const savedMockRole = localStorage.getItem('flavor_haven_mock_role') || 'customer';
-      setProfile(savedMockRole === 'admin' ? MOCK_ADMIN_PROFILE : MOCK_CUSTOMER_PROFILE);
-      setLoading(false);
-    } else {
-      // Reload Supabase session
-      supabase.auth.getSession().then(({ data: { session } }) => {
-        if (session?.user) {
-          supabase.from('profiles').select('*').eq('id', session.user.id).single().then(({ data, error }) => {
-            if (!error && data) {
-              setProfile(data);
-            }
-            setLoading(false);
-          });
-        } else {
-          setProfile(null);
-          setLoading(false);
-        }
-      });
-    }
+    console.log('Mock Auth Mode has been permanently removed.');
   };
 
   return (
