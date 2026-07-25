@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useApp } from '@/context/AppContext';
 import Navbar from '@/components/navbar';
-import { ShieldAlert, RefreshCw, BarChart3, TrendingUp, DollarSign, ShoppingBag, Calendar, Users, Key, Utensils, ClipboardList } from 'lucide-react';
+import { ShieldAlert, RefreshCw, BarChart3, TrendingUp, DollarSign, ShoppingBag, Calendar, Users, Key, Utensils, ClipboardList, MessageSquare } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Order, Reservation } from '@/types';
@@ -12,10 +12,12 @@ import { supabase } from '@/lib/supabase';
 
 export default function AdminDashboardPage() {
   const router = useRouter();
-  const { profile, toggleMockRole, isMockUser, loading: authLoading } = useAuth();
+  const { profile, loading: authLoading } = useAuth();
   const { getReservations } = useApp();
   const [orders, setOrders] = useState<Order[]>([]);
   const [reservations, setReservations] = useState<Reservation[]>([]);
+  const [registeredUsersCount, setRegisteredUsersCount] = useState(0);
+  const [reviewsCount, setReviewsCount] = useState(0);
   const [loading, setLoading] = useState(true);
 
   // Client-side route guard: Redirect guest to homepage and pop Auth Modal
@@ -42,6 +44,26 @@ export default function AdminDashboardPage() {
 
         // Load reservations
         setReservations(getReservations());
+
+        // Load registered users count
+        const { count, error: userCountError } = await supabase
+          .from('profiles')
+          .select('*', { count: 'exact', head: true });
+        if (!userCountError && count !== null) {
+          setRegisteredUsersCount(count);
+        } else {
+          setRegisteredUsersCount(0);
+        }
+
+        // Load total reviews count
+        const { count: revCount, error: revCountError } = await supabase
+          .from('reviews')
+          .select('*', { count: 'exact', head: true });
+        if (!revCountError && revCount !== null) {
+          setReviewsCount(revCount);
+        } else {
+          setReviewsCount(0);
+        }
       } catch (e) {
         console.error('Error fetching admin data', e);
       } finally {
@@ -72,19 +94,9 @@ export default function AdminDashboardPage() {
           You need Admin privileges to view this management console. (Currently signed in as: {profile?.role || 'Guest'})
         </p>
         <div className="flex gap-3 mt-6">
-          {isMockUser ? (
-            <button
-              onClick={toggleMockRole}
-              className="px-5 py-2.5 bg-slate-800 hover:bg-slate-900 text-white font-bold rounded-xl text-xs flex items-center gap-1.5 cursor-pointer border-0"
-            >
-              <RefreshCw className="h-3.5 w-3.5" />
-              <span>Switch to Admin Profile</span>
-            </button>
-          ) : (
-            <Link href="/" className="px-5 py-2.5 bg-brand-medium text-white font-bold rounded-xl text-xs cursor-pointer">
-              Return Home
-            </Link>
-          )}
+          <Link href="/" className="px-5 py-2.5 bg-brand-medium text-white font-bold rounded-xl text-xs cursor-pointer">
+            Return Home
+          </Link>
         </div>
       </div>
     );
@@ -118,26 +130,40 @@ export default function AdminDashboardPage() {
           </div>
           
           {/* Sub Navigation links */}
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <Link
               href="/admin/foods"
-              className="px-4 py-2.5 bg-white border border-slate-200 text-slate-700 font-bold hover:bg-slate-550 rounded-xl text-xs flex items-center gap-1.5 shadow-sm cursor-pointer"
+              className="px-3.5 py-2.5 bg-white border border-slate-200 text-slate-700 font-bold hover:bg-slate-50 rounded-xl text-xs flex items-center gap-1.5 shadow-sm cursor-pointer"
             >
               <Utensils className="h-4 w-4 text-brand-medium" />
-              <span>Manage Menu Catalog</span>
+              <span>Menu Items</span>
+            </Link>
+            <Link
+              href="/admin/categories"
+              className="px-3.5 py-2.5 bg-white border border-slate-200 text-slate-700 font-bold hover:bg-slate-50 rounded-xl text-xs flex items-center gap-1.5 shadow-sm cursor-pointer"
+            >
+              <Utensils className="h-4 w-4 text-amber-500" />
+              <span>Categories</span>
             </Link>
             <Link
               href="/admin/orders"
-              className="px-4 py-2.5 bg-brand-medium hover:bg-emerald-750 text-white font-bold rounded-xl text-xs flex items-center gap-1.5 shadow shadow-brand-medium/10 cursor-pointer"
+              className="px-3.5 py-2.5 bg-white border border-slate-200 text-slate-700 font-bold hover:bg-slate-50 rounded-xl text-xs flex items-center gap-1.5 shadow-sm cursor-pointer"
             >
-              <ClipboardList className="h-4 w-4" />
-              <span>Manage Live Orders</span>
+              <ClipboardList className="h-4 w-4 text-blue-500" />
+              <span>Live Orders</span>
+            </Link>
+            <Link
+              href="/admin/reviews"
+              className="px-3.5 py-2.5 bg-brand-medium hover:bg-emerald-755 text-white font-bold rounded-xl text-xs flex items-center gap-1.5 shadow shadow-brand-medium/10 cursor-pointer"
+            >
+              <MessageSquare className="h-4 w-4" />
+              <span>Review Moderation</span>
             </Link>
           </div>
         </div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
           {/* Revenue */}
           <div className="glass-panel rounded-3xl p-6 border border-emerald-100/50 bg-white/40 shadow-sm flex items-center gap-4">
             <div className="p-3 bg-emerald-50 text-brand-medium rounded-2xl">
@@ -178,7 +204,18 @@ export default function AdminDashboardPage() {
             </div>
             <div>
               <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Registered Users</p>
-              <p className="text-2xl font-extrabold text-slate-800">54 Accounts</p>
+              <p className="text-2xl font-extrabold text-slate-800">{registeredUsersCount} Accounts</p>
+            </div>
+          </div>
+
+          {/* Reviews */}
+          <div className="glass-panel rounded-3xl p-6 border border-emerald-100/50 bg-white/40 shadow-sm flex items-center gap-4">
+            <div className="p-3 bg-rose-50 text-rose-600 rounded-2xl">
+              <MessageSquare className="h-6 w-6" />
+            </div>
+            <div>
+              <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Total Reviews</p>
+              <p className="text-2xl font-extrabold text-slate-800">{reviewsCount} Feedbacks</p>
             </div>
           </div>
         </div>

@@ -151,6 +151,17 @@ export default function ReviewSection({ reviews, onSubmitReview }: ReviewSection
                   "{rev.comment}"
                 </p>
 
+                {rev.admin_reply && (
+                  <div className="mt-4 p-3 bg-emerald-500/5 border border-emerald-500/10 rounded-2xl text-xs space-y-1">
+                    <p className="font-extrabold text-emerald-800 flex items-center gap-1">
+                      <span>👨‍🍳 Response from Chef Admin:</span>
+                    </p>
+                    <p className="text-[11px] leading-relaxed text-slate-700 italic">
+                      "{rev.admin_reply}"
+                    </p>
+                  </div>
+                )}
+
                 {/* Micro interaction - Like button */}
                 <div className="flex justify-end mt-4 pt-3 border-t border-slate-100">
                   <button

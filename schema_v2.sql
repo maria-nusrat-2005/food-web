@@ -299,3 +299,6 @@ INSERT INTO banners (title, image, link, active) VALUES
 
 -- Helper script to promote a user to admin in the database:
 -- UPDATE profiles SET role = 'admin' WHERE email = 'your-email@example.com';
+
+-- Migration: Add admin_reply to reviews
+ALTER TABLE reviews ADD COLUMN IF NOT EXISTS admin_reply TEXT;

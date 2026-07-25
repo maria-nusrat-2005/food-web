@@ -86,6 +86,7 @@ export interface Review {
   comment: string;
   likes: number;
   created_at?: string;
+  admin_reply?: string | null;
 }
 
 export interface Favorite {

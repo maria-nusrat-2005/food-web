@@ -18,6 +18,8 @@ interface AppContextType {
   markNotificationsAsRead: () => void;
   createReservation: (name: string, phone: string, guests: number, date: string, time: string) => Promise<boolean>;
   getReservations: () => Reservation[];
+  refreshFoods: () => Promise<void>;
+  refreshCategories: () => Promise<void>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -241,6 +243,28 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const getReservations = () => reservations;
 
+  const refreshFoods = async () => {
+    try {
+      const { data: foodData } = await supabase.from('foods').select('*');
+      if (foodData && foodData.length > 0) {
+        setFoods(foodData);
+      }
+    } catch (err) {
+      console.error('Error refreshing foods catalog:', err);
+    }
+  };
+
+  const refreshCategories = async () => {
+    try {
+      const { data: catData } = await supabase.from('categories').select('*');
+      if (catData && catData.length > 0) {
+        setCategories(catData);
+      }
+    } catch (err) {
+      console.error('Error refreshing categories:', err);
+    }
+  };
+
   return (
     <AppContext.Provider
       value={{
@@ -256,6 +280,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         markNotificationsAsRead,
         createReservation,
         getReservations,
+        refreshFoods,
+        refreshCategories,
       }}
     >
       {children}

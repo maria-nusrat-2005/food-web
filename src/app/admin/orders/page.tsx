@@ -13,7 +13,7 @@ import { supabase } from '@/lib/supabase';
 const STATUS_OPTIONS = ['received', 'preparing', 'cooking', 'delivery', 'delivered', 'cancelled'];
 
 export default function AdminOrdersPage() {
-  const { profile, toggleMockRole, loading: authLoading } = useAuth();
+  const { profile, loading: authLoading } = useAuth();
   const { isSupabaseConnected } = useApp();
   const router = useRouter();
 
@@ -66,15 +66,11 @@ export default function AdminOrdersPage() {
         <ShieldAlert className="h-16 w-16 text-rose-500 mb-3 animate-pulse" />
         <h2 className="text-xl font-bold text-slate-800">Access Denied</h2>
         <p className="text-slate-500 text-sm mt-1 text-center max-w-sm">
-          You need Admin privileges to view this management console.
+          You need Admin privileges to view this management console. (Currently signed in as: {profile?.role || 'Guest'})
         </p>
-        <button
-          onClick={toggleMockRole}
-          className="mt-6 px-5 py-2.5 bg-slate-800 hover:bg-slate-900 text-white font-bold rounded-xl text-xs flex items-center gap-1.5 cursor-pointer"
-        >
-          <RefreshCw className="h-3.5 w-3.5" />
-          <span>Switch to Admin Profile</span>
-        </button>
+        <Link href="/" className="mt-6 px-5 py-2.5 bg-brand-medium text-white font-bold rounded-xl text-xs cursor-pointer">
+          Return Home
+        </Link>
       </div>
     );
   }

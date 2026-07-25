@@ -11,8 +11,8 @@ import { Food } from '@/types';
 import { supabase } from '@/lib/supabase';
 
 export default function AdminFoodsPage() {
-  const { profile, toggleMockRole, loading: authLoading } = useAuth();
-  const { foods, categories, isSupabaseConnected } = useApp();
+  const { profile, loading: authLoading } = useAuth();
+  const { foods, categories, isSupabaseConnected, refreshFoods } = useApp();
   const router = useRouter();
 
   // Route guard: Redirect guest to homepage and pop Auth Modal
@@ -60,15 +60,11 @@ export default function AdminFoodsPage() {
         <ShieldAlert className="h-16 w-16 text-rose-500 mb-3 animate-pulse" />
         <h2 className="text-xl font-bold text-slate-800">Access Denied</h2>
         <p className="text-slate-500 text-sm mt-1 text-center max-w-sm">
-          You need Admin privileges to view this management console.
+          You need Admin privileges to view this management console. (Currently signed in as: {profile?.role || 'Guest'})
         </p>
-        <button
-          onClick={toggleMockRole}
-          className="mt-6 px-5 py-2.5 bg-slate-800 hover:bg-slate-900 text-white font-bold rounded-xl text-xs flex items-center gap-1.5 cursor-pointer"
-        >
-          <RefreshCw className="h-3.5 w-3.5" />
-          <span>Switch to Admin Profile</span>
-        </button>
+        <Link href="/" className="mt-6 px-5 py-2.5 bg-brand-medium text-white font-bold rounded-xl text-xs cursor-pointer">
+          Return Home
+        </Link>
       </div>
     );
   }
@@ -144,6 +140,9 @@ export default function AdminFoodsPage() {
         await supabase.from('foods').insert([foodData]);
       }
 
+      // Refresh global app foods memory catalog
+      await refreshFoods();
+
       // Sync local state
       if (editingFood) {
         setLocalFoods((prev) =>
@@ -169,6 +168,7 @@ export default function AdminFoodsPage() {
     try {
       if (isSupabaseConnected) {
         await supabase.from('foods').delete().eq('id', foodId);
+        await refreshFoods();
       }
       setLocalFoods((prev) => prev.filter((f) => f.id !== foodId));
     } catch (e) {
